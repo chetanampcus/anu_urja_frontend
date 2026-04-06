@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "app/component/command.js", "app/component/popover.js", "app/component/card.js", "app/component/button.js", "app/dashboard/page.js", "app/component/dialog.js"  ],
   "exclude": ["node_modules"]
 }
