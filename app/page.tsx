@@ -1,50 +1,69 @@
-// app/page.tsx
+// app/page.tsx - Fixed filter dropdowns
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import * as XLSX from 'xlsx';
 import { Search, ChevronDown, Eye, ChevronLeft, ChevronRight, Check } from "lucide-react";
 
-// Searchable Filter Component (from your dashboard)
-function SearchableFilter({ placeholder, options, className }: { placeholder: string; options: string[], className?: string }) {
+// Searchable Filter Component with fixed dropdown positioning
+function SearchableFilter({ placeholder, options, className, value, onChange }: { placeholder: string; options: string[], className?: string; value?: string; onChange?: (value: string) => void }) {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
+  const [internalValue, setInternalValue] = useState(value || "");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleSelect = (option: string) => {
+    const newValue = internalValue === option ? "" : option;
+    setInternalValue(newValue);
+    if (onChange) onChange(newValue);
+    setOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <div className={`relative ${className || "flex-1"}`}>
+    <div ref={dropdownRef} className={`relative ${className || "flex-1"}`} style={{ zIndex: 9999 }}>
       <button
         onClick={() => setOpen(!open)}
         className={`flex h-10 min-w-0 w-full rounded-md bg-slate-50 border border-slate-200 hover:bg-white transition-colors cursor-pointer items-center justify-between px-3 text-slate-600 outline-none focus:bg-white focus:ring-2 focus:ring-slate-300`}
       >
         <span className="flex-1 tracking-[0.01em] leading-5 truncate text-left">
-          {value || placeholder}
+          {internalValue || placeholder}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 ml-2" />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg z-[999] max-h-60 overflow-auto">
-          <div className="p-1">
+        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg z-[9999] max-h-60 overflow-auto">
+          <div className="p-1 sticky top-0 bg-white border-b border-slate-100">
             <input
               type="text"
               placeholder="Search..."
-              className="w-full p-2 text-sm border border-slate-200 rounded-lg mb-1"
+              className="w-full p-2 text-sm border border-slate-200 rounded-lg"
+              onClick={(e) => e.stopPropagation()}
               onChange={(e) => {
                 const search = e.target.value.toLowerCase();
-                const items = document.querySelectorAll('.filter-option');
+                const items = document.querySelectorAll(`.filter-option-${placeholder.replace(/\s/g, '')}`);
                 items.forEach(item => {
                   const text = item.textContent?.toLowerCase() || '';
                   (item as HTMLElement).style.display = text.includes(search) ? 'block' : 'none';
                 });
               }}
             />
+          </div>
+          <div className="p-1">
             {options.map((option) => (
               <div
                 key={option}
-                className={`filter-option px-3 py-2 text-sm cursor-pointer hover:bg-slate-100 rounded-lg ${value === option ? 'bg-indigo-50 text-indigo-700' : ''}`}
-                onClick={() => {
-                  setValue(value === option ? "" : option);
-                  setOpen(false);
-                }}
+                className={`filter-option-${placeholder.replace(/\s/g, '')} px-3 py-2 text-sm cursor-pointer hover:bg-slate-100 rounded-lg ${internalValue === option ? 'bg-indigo-50 text-indigo-700' : ''}`}
+                onClick={() => handleSelect(option)}
               >
                 {option}
               </div>
@@ -228,6 +247,12 @@ interface LogEntry {
   timestamp: number;
 }
 
+// Available projects list
+const availableProjects = [
+  "तारापूर अणुऊर्जा प्रकल्प ३ & ४",
+  "सुर्या प्रकल्प",
+];
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -238,6 +263,7 @@ export default function Home() {
   const [sheetsList, setSheetsList] = useState<{ name: string; rowCount: number }[]>([]);
   const [darkMode, setDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'records'>('upload');
+  const [selectedProject, setSelectedProject] = useState("तारापूर अणुऊर्जा प्रकल्प ३ & ४");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -247,12 +273,25 @@ export default function Home() {
   // Search columns filter
   const availableColumns = ["Subject", "File No", "Remarks", "Shelf No"];
   const [searchColumns, setSearchColumns] = useState<string[]>(availableColumns);
+  const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const columnMenuRef = useRef<HTMLDivElement>(null);
 
   const toggleColumn = (col: string) => {
     setSearchColumns(prev =>
       prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]
     );
   };
+
+  // Close column menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node)) {
+        setColumnMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -381,6 +420,7 @@ export default function Home() {
     setSheetsList([]);
     
     addLog(`🚀 Starting processing of ${files.length} file(s)...`, 'info');
+    addLog(`📁 Selected Project: ${selectedProject}`, 'info');
 
     abortControllerRef.current = new AbortController();
     let totalRecords = 0;
@@ -416,7 +456,7 @@ export default function Home() {
     addLog(`🏁 Processing finished. Total records: ${totalRecords}`, 'info');
     setIsProcessing(false);
     abortControllerRef.current = null;
-  }, [files, isProcessing, addLog, formatFileSize]);
+  }, [files, isProcessing, addLog, formatFileSize, selectedProject]);
 
   const handleFilesSelected = useCallback((selectedFiles: File[]) => {
     setFiles(selectedFiles);
@@ -454,7 +494,7 @@ export default function Home() {
   const TEXT = {
     title: "अभिलेख कक्षात पाठवावयाची प्रकरणे",
     branch: "शाखा / विभागाचे नाव : पुनर्वसन शाखा, जिल्हाधिकारी कार्यालय पालघर",
-    projectName: "प्रकरणाचे नाव: तारापूर अणुऊर्जा प्रकल्प ३ & ४",
+    projectName: selectedProject,
   }
 
   if (!mounted) {
@@ -529,7 +569,18 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* Upload Doc Tab - Removed Reset Button */}
+        {/* Searchable Project Dropdown - Common for both tabs */}
+        <div className="mb-6 relative" style={{ zIndex: 100 }}>
+          <SearchableFilter
+            placeholder="Select Project"
+            options={availableProjects}
+            value={selectedProject}
+            onChange={setSelectedProject}
+            className="w-[350px]"
+          />
+        </div>
+
+        {/* Upload Doc Tab */}
         {activeTab === 'upload' && (
           <div className="bg-white rounded-2xl shadow-xl p-6">
             <FileUpload 
@@ -587,7 +638,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Record Read Tab - Removed Progress Log */}
+        {/* Record Read Tab */}
         {activeTab === 'records' && (
           <>
             {/* Title Card */}
@@ -604,11 +655,11 @@ export default function Home() {
 
             {allRecords.length > 0 ? (
               <>
-                {/* Search + Filter Wrapper */}
-                <div className="mb-6 border-0 shadow-xl bg-white rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap p-4 w-full">
+                {/* Search + Filter Wrapper - Removed overflow-hidden */}
+                <div className="mb-6 border-0 shadow-xl bg-white rounded-xl">
+                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap p-4 w-full relative">
                     {/* Search */}
-                    <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-300 overflow-visible transition-colors">
+                    <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-300 transition-colors relative">
                       <div className="relative flex-1 h-full min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                         <input
@@ -619,11 +670,11 @@ export default function Home() {
                           className="w-full h-full pl-9 pr-3 text-sm bg-transparent border-0 focus:outline-none focus:ring-0 text-slate-900 placeholder:text-slate-500 rounded-l-lg"
                         />
                       </div>
-                      <div className="relative">
+                      <div className="relative" ref={columnMenuRef}>
                         <button
-                          onClick={() => {
-                            const menu = document.getElementById('column-menu');
-                            if (menu) menu.classList.toggle('hidden');
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setColumnMenuOpen(!columnMenuOpen);
                           }}
                           className="flex items-center justify-between gap-1.5 px-3 h-full border-l border-slate-200 hover:bg-slate-100 transition-colors focus:outline-none shrink-0 bg-transparent cursor-pointer rounded-r-lg text-sm text-slate-600 min-w-[110px]"
                         >
@@ -632,38 +683,46 @@ export default function Home() {
                           </span>
                           <ChevronDown className="h-4 w-4 text-slate-400" />
                         </button>
-                        <div id="column-menu" className="hidden absolute right-0 mt-1 w-48 z-[999] bg-white border border-slate-200 shadow-md rounded-md py-1">
-                          {availableColumns.map(col => (
-                            <div
-                              key={col}
-                              onClick={() => toggleColumn(col)}
-                              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100"
-                            >
-                              <Check className={`h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-indigo-600" : "opacity-0"}`} />
-                              {col}
-                            </div>
-                          ))}
-                        </div>
+                        {columnMenuOpen && (
+                          <div className="absolute right-0 mt-1 w-48 z-[9999] bg-white border border-slate-200 shadow-md rounded-md py-1">
+                            {availableColumns.map(col => (
+                              <div
+                                key={col}
+                                onClick={() => toggleColumn(col)}
+                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100"
+                              >
+                                <Check className={`h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-indigo-600" : "opacity-0"}`} />
+                                {col}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Filters */}
-                    <div className="flex items-center gap-3 shrink-0 text-left text-[14px]">
-                      <SearchableFilter
-                        placeholder="Select Shelf No"
-                        options={["1", "2", "3", "4"]}
-                        className="w-[180px]"
-                      />
-                      <SearchableFilter
-                        placeholder="Select Gattha No"
-                        options={sheetsList.map(s => s.name)}
-                        className="w-[150px]"
-                      />
-                      <SearchableFilter
-                        placeholder="Select Mahitiche Vargikaran"
-                        options={["अ", "ब", "क", "ड"]}
-                        className="w-[140px]"
-                      />
+                    {/* Filters - Each filter has its own dropdown with high z-index */}
+                    <div className="flex items-center gap-3 shrink-0 text-left text-[14px] relative">
+                      <div className="relative" style={{ zIndex: 9998 }}>
+                        <SearchableFilter
+                          placeholder="Select Shelf No"
+                          options={["1", "2", "3", "4"]}
+                          className="w-[180px]"
+                        />
+                      </div>
+                      <div className="relative" style={{ zIndex: 9997 }}>
+                        <SearchableFilter
+                          placeholder="Select Gattha No"
+                          options={sheetsList.map(s => s.name)}
+                          className="w-[150px]"
+                        />
+                      </div>
+                      <div className="relative" style={{ zIndex: 9996 }}>
+                        <SearchableFilter
+                          placeholder="Select Mahitiche Vargikaran"
+                          options={["अ", "ब", "क", "ड"]}
+                          className="w-[140px]"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -671,12 +730,9 @@ export default function Home() {
                 {/* Table Card */}
                 <div className="border-0 shadow-xl bg-white rounded-xl overflow-hidden">
                   <div className="mt-4 border-t border-slate-100 bg-slate-50/30">
-                    {/* SCROLL AREA */}
                     <div className="max-h-[600px] overflow-auto relative rounded-b-xl">
                       <table className="w-full border-collapse text-sm">
-                        {/* HEADER */}
                         <thead className="sticky top-0 z-[100] bg-gradient-to-r from-blue-50/95 to-indigo-50/95 backdrop-blur-md shadow-sm border-b border-indigo-100">
-                          {/* ROW 1 */}
                           <tr className="text-indigo-950 font-bold text-xs uppercase tracking-wider">
                             <th className="p-4 align-middle whitespace-nowrap text-center">अ.क्र</th>
                             <th className="p-4 align-middle whitespace-nowrap text-center">शेल्फ क्र.</th>
@@ -692,7 +748,6 @@ export default function Home() {
                             <th className="p-4 align-middle whitespace-nowrap text-center">पृष्ठ क्र.</th>
                             <th className="p-4 align-middle whitespace-nowrap text-center">View</th>
                           </tr>
-                          {/* ROW 2 */}
                           <tr className="text-indigo-800 text-[11px] uppercase tracking-wider bg-indigo-100/20 border-t border-indigo-100/60">
                             <th className="p-2"></th>
                             <th className="p-2"></th>
@@ -711,14 +766,9 @@ export default function Home() {
                             <th className="p-2"></th>
                           </tr>
                         </thead>
-
-                        {/* BODY */}
                         <tbody className="divide-y divide-slate-100">
                           {paginatedData.map((record) => (
-                            <tr
-                              key={record.id}
-                              className="group bg-white hover:bg-indigo-50/40 transition-colors duration-200"
-                            >
+                            <tr key={record.id} className="group bg-white hover:bg-indigo-50/40 transition-colors duration-200">
                               <td className="p-4 text-center font-medium text-slate-700">{record.serialNo}</td>
                               <td className="p-4 text-center text-slate-600">{record.shelfNo || '-'}</td>
                               <td className="p-4 text-center text-slate-600">{record.bundleNo || '-'}</td>
@@ -733,8 +783,8 @@ export default function Home() {
                                   {record.subject}
                                 </div>
                               </td>
-                              <td className="p-4 text-center text-slate-600 border-l border-slate-50 group-hover:border-indigo-50/50">{record.notePages}</td>
-                              <td className="p-4 text-center text-slate-600 border-r border-slate-50 group-hover:border-indigo-50/50">{record.correspondencePages}</td>
+                              <td className="p-4 text-center text-slate-600 border-l border-slate-50">{record.notePages}</td>
+                              <td className="p-4 text-center text-slate-600 border-r border-slate-50">{record.correspondencePages}</td>
                               <td className="p-4 text-center">
                                 <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
                                   record.classification === 'अ' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
@@ -753,8 +803,8 @@ export default function Home() {
                                   record.destructionDate
                                 )}
                               </td>
-                              <td className="p-4 text-center text-slate-600 border-l border-slate-50 group-hover:border-indigo-50/50">{record.senderSignature || '-'}</td>
-                              <td className="p-4 text-center text-slate-600 border-r border-slate-50 group-hover:border-indigo-50/50">{record.receiverSignature || '-'}</td>
+                              <td className="p-4 text-center text-slate-600 border-l border-slate-50">{record.senderSignature || '-'}</td>
+                              <td className="p-4 text-center text-slate-600 border-r border-slate-50">{record.receiverSignature || '-'}</td>
                               <td className="p-4">
                                 <div className="whitespace-pre-line break-words max-w-[250px] text-slate-500 text-xs leading-relaxed">
                                   {record.remarks}
@@ -764,9 +814,9 @@ export default function Home() {
                               <td className="p-4 text-center">
                                 <button 
                                   onClick={() => setSelectedFile(record)}
-                                  className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 shadow-sm hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-all font-medium text-sm group/btn"
+                                  className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 shadow-sm hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-all font-medium text-sm"
                                 >
-                                  <Eye className="w-4 h-4 mr-1.5 text-slate-400 group-hover/btn:text-indigo-600 transition-colors" />
+                                  <Eye className="w-4 h-4 mr-1.5 text-slate-400" />
                                   View
                                 </button>
                               </td>
@@ -787,29 +837,18 @@ export default function Home() {
                       </p>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-slate-600">Items per page:</span>
-                        <div className="relative">
-                          <button
-                            onClick={() => {
-                              const menu = document.getElementById('items-per-page-menu');
-                              if (menu) menu.classList.toggle('hidden');
-                            }}
-                            className="w-20 px-2 py-1 border border-slate-300 rounded-md bg-white text-sm flex items-center justify-between"
-                          >
-                            {itemsPerPage}
-                            <ChevronDown className="h-4 w-4" />
-                          </button>
-                          <div id="items-per-page-menu" className="hidden absolute top-full left-0 mt-1 w-20 bg-white border border-slate-200 rounded-md shadow-md z-50">
-                            {[5, 10, 20, 50].map((value) => (
-                              <div
-                                key={value}
-                                onClick={() => handleItemsPerPageChange(value)}
-                                className={`px-2 py-1 text-sm cursor-pointer hover:bg-slate-100 ${itemsPerPage === value ? "bg-indigo-50 text-indigo-700" : ""}`}
-                              >
-                                {value}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        <select
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          className="w-20 px-2 py-1 border border-slate-300 rounded-md bg-white text-sm"
+                        >
+                          {[5, 10, 20, 50].map((value) => (
+                            <option key={value} value={value}>{value}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
