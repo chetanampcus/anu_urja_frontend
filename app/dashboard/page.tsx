@@ -3,30 +3,13 @@
 import { useState } from "react"
 import { Search, Filter, ChevronDown, Eye, FileText, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { Button } from "../component/button"
-import { Input } from "../component/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../component/dropdown-menu"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../component/table"
-import { Badge } from "../component/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../component/dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "../component/card"
+import { Card, CardContent } from "../component/card"
 import {
   Popover,
   PopoverContent,
@@ -309,8 +292,6 @@ export default function DashboardPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
-  const [selectedFile, setSelectedFile] = useState<FileRecord | null>(null)
-  const totalRecords = 8
 
   // Text constants for Marathi content
   const TEXT = {
@@ -355,7 +336,6 @@ export default function DashboardPage() {
               <p className="text-xs text-slate-500">Document Management System</p>
             </div>
           </div>
-
         </div>
       </header>
 
@@ -377,7 +357,8 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4 flex-wrap md:flex-nowrap p-4 w-full">
 
               {/* Search */}
-              <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-300 overflow-visible transition-colors">
+              <span className="text-sm font-medium text-slate-600 shrink-0">Search:</span>
+              <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-300 overflow-visible transition-colors relative">
                 <div className="relative flex-1 h-full min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
@@ -417,6 +398,7 @@ export default function DashboardPage() {
 
               {/* Filters */}
               <div className="flex items-center gap-3 shrink-0 text-left text-[14px]">
+                <span className="text-sm font-medium text-slate-600">Filters:</span>
 
                 {/* Department */}
                 <SearchableFilter
@@ -448,7 +430,6 @@ export default function DashboardPage() {
         <Card className="border-0 shadow-xl bg-white">
           <CardContent className="p-0">
 
-            {/* Table Section */}
             {/* Table Section */}
             <div className="mt-4 border-t border-slate-100 bg-slate-50/30">
 
