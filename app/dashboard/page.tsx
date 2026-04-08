@@ -25,7 +25,6 @@ import {
   CommandList,
 } from "../component/command"
 import CustomDropdown from "../component/CustomDropdown"
-import Header from "../component/Header"
 
 // Replaced SearchableFilter with CustomDropdown
 
@@ -297,8 +296,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50">
-      <Header />
-
       <main className="max-w-[1600px] mx-auto px-4 py-6">
         
         {/* Project Dropdown */}

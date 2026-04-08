@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -13,15 +13,15 @@ const tabs = [
 
 const Header = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState('Upload');
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const navRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const currentPath = window.location.pathname;
-    const active = tabs.find(tab => tab.path === currentPath);
+    const active = tabs.find(tab => tab.path === pathname);
     if (active) setActiveTab(active.name);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     const updateIndicatorStyle = () => {
@@ -49,7 +49,7 @@ const Header = () => {
   };
 
   return (
-    <div className="w-full relative z-[1000]">
+    <header className="sticky top-0 z-[1000] w-full bg-[#F7F7F7] pb-2">
       <div className="max-w-[1600px] mx-auto px-4 pt-2">
         <div
           style={{
@@ -134,7 +134,7 @@ const Header = () => {
       </div>
     </div>
   </div>
-</div>
+</header>
   );
 };
 

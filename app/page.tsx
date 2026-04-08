@@ -4,8 +4,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import * as XLSX from 'xlsx';
 import Link from "next/link";
-import { Search, ChevronDown, Eye, ChevronLeft, ChevronRight, Check, Upload, FileText, Link as LinkIcon, CheckCircle, AlertCircle, Loader2, UploadCloud } from "lucide-react";
-import Header from "./component/Header";
+import type { LucideIcon } from "lucide-react";
+import { Search, ChevronDown, ChevronLeft, ChevronRight, Check, Upload, FileText, Link as LinkIcon, CheckCircle, AlertCircle, Loader2, UploadCloud, X, Table2, FileStack } from "lucide-react";
 import CustomDropdown from "./component/CustomDropdown";
 import { MdOutlineFileUpload } from "react-icons/md";
 // ==================== Types & Interfaces ====================
@@ -169,9 +169,11 @@ function FileUpload({ onFilesSelected, isProcessing, darkMode }: { onFilesSelect
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && !isProcessing) {
-      onFilesSelected(Array.from(e.target.files));
-    }
+    const input = e.target;
+    if (!input.files?.length || isProcessing) return;
+    const excel = firstExcelFile(input.files);
+    input.value = "";
+    if (excel) onFilesSelected([excel]);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -192,8 +194,9 @@ function FileUpload({ onFilesSelected, isProcessing, darkMode }: { onFilesSelect
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
-    if (!isProcessing && e.dataTransfer.files) {
-      onFilesSelected(Array.from(e.dataTransfer.files));
+    if (!isProcessing && e.dataTransfer.files?.length) {
+      const excel = firstExcelFile(e.dataTransfer.files);
+      if (excel) onFilesSelected([excel]);
     }
   };
 
@@ -211,8 +214,7 @@ function FileUpload({ onFilesSelected, isProcessing, darkMode }: { onFilesSelect
     >
       <input
         type="file"
-        multiple
-        accept=".xlsx,.xls"
+        accept={EXCEL_ACCEPT}
         onChange={handleFileChange}
         disabled={isProcessing}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -223,7 +225,7 @@ function FileUpload({ onFilesSelected, isProcessing, darkMode }: { onFilesSelect
           Drop Excel files here or click to upload
         </p>
         <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Supports .xlsx, .xls files • Multiple files allowed
+          .xlsx or .xls • One file only (replaces previous)
         </p>
       </div>
     </div>
@@ -239,12 +241,32 @@ const availableProjects = [
 
 const availableColumns = ["Subject", "File No", "Remarks", "Shelf No"];
 
+const EXCEL_ACCEPT =
+  ".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel";
+
+function isExcelFile(file: File): boolean {
+  const lower = file.name.toLowerCase();
+  if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) return true;
+  return (
+    file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    file.type === "application/vnd.ms-excel" ||
+    file.type === "application/vnd.ms-excel.sheet.macroEnabled.12"
+  );
+}
+
+function firstExcelFile(files: FileList | File[]): File | null {
+  for (const f of Array.from(files)) {
+    if (isExcelFile(f)) return f;
+  }
+  return null;
+}
+
 type StepKey = 'upload' | 'records' | 'mapping';
 
-const steps: { key: StepKey; label: string }[] = [
-  { key: 'upload', label: 'Upload' },
-  { key: 'records', label: 'Records' },
-  { key: 'mapping', label: 'PDF Mapping' },
+const steps: { key: StepKey; label: string; icon: LucideIcon }[] = [
+  { key: "upload", label: "Upload", icon: Upload },
+  { key: "records", label: "Records", icon: Table2 },
+  { key: "mapping", label: "PDF Mapping", icon: FileStack },
 ];
 
 export default function Home() {
@@ -261,7 +283,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [selectedFile, setSelectedFile] = useState<FileRecord | null>(null);
   const [searchColumns, setSearchColumns] = useState<string[]>(availableColumns);
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
   const [pdfMappings, setPdfMappings] = useState<PDFMapping[]>([]);
@@ -274,10 +295,11 @@ export default function Home() {
   const allChecked = checks.every(Boolean);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      setFiles(prev => [...prev, ...selectedFiles]);
-    }
+    const input = e.target;
+    if (!input.files?.length) return;
+    const excel = firstExcelFile(input.files);
+    input.value = "";
+    if (excel) setFiles([excel]);
   };
 
   // Clears all selected files
@@ -285,6 +307,10 @@ export default function Home() {
     setFiles([]); // assuming you have a `files` state
     setLogs([]); // optional: clear logs too
     setProgress(0); // reset progress if needed
+  };
+
+  const removeFileAt = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Exports selected files
@@ -301,8 +327,9 @@ export default function Home() {
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    setFiles(prev => [...prev, ...droppedFiles]);
+    if (!e.dataTransfer.files?.length) return;
+    const excel = firstExcelFile(e.dataTransfer.files);
+    if (excel) setFiles([excel]);
   };
 
   // Check if project dropdown should be disabled (after records are extracted)
@@ -557,13 +584,12 @@ export default function Home() {
   }, [files, isProcessing, addLog, formatFileSize, selectedProject]);
 
   const handleFilesSelected = useCallback((selectedFiles: File[]) => {
-    setFiles(selectedFiles);
+    const excel = firstExcelFile(selectedFiles);
+    if (!excel) return;
+    setFiles([excel]);
     setSheetsList([]);
     setAllRecords([]);
-    addLog(`📎 ${selectedFiles.length} file(s) selected`, 'info');
-    selectedFiles.forEach(f => {
-      addLog(`   └─ ${f.name} (${formatFileSize(f.size)})`, 'info');
-    });
+    addLog(`📎 ${excel.name} (${formatFileSize(excel.size)})`, 'info');
   }, [addLog, formatFileSize]);
 
   const filteredData = allRecords.filter((record) => {
@@ -593,115 +619,143 @@ export default function Home() {
     return null;
   }
 
+  const goToStep = (stepKey: StepKey) => {
+    if (stepKey === "upload") setActiveTab("upload");
+    else if (stepKey === "records" && allRecords.length > 0) setActiveTab("records");
+    else if (stepKey === "mapping" && allRecords.length > 0) setActiveTab("mapping");
+  };
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-slate-900' : 'bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50'}`}>
-      {/* Header */}
-      <Header />
+    <div
+      className={`flex min-h-0 flex-col overflow-hidden transition-colors duration-300 h-[calc(100dvh-7.5rem)] ${darkMode ? "dark bg-slate-900" : "bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50"}`}
+    >
+      <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-4 py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden lg:flex-row lg:items-stretch">
+          {/* Left: stepper — fills column; no page scroll */}
+          <aside className="flex w-full shrink-0 flex-col self-stretch min-h-0 lg:w-[20%] lg:min-w-[11rem] lg:max-w-[15rem]">
+            <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-800 lg:min-h-0 lg:flex-1">
+              <p className="mb-4 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Progress
+              </p>
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                {steps.map((step, index) => {
+                  const isActive = activeTab === step.key;
+                  const isCompleted = isStepCompleted(step.key);
+                  const disabled =
+                    (step.key === "records" && allRecords.length === 0) ||
+                    (step.key === "mapping" && allRecords.length === 0);
+                  const StepIcon = step.icon;
 
-      <main className="max-w-[1600px] mx-auto px-4 py-6">
-
-        {/* Project Dropdown - Common for all tabs - Disabled after Stage 1 */}
-        <div className="mb-6 relative" style={{ zIndex: 100 }}>
-          <label className={`block text-sm font-medium mb-1 ${isProjectDisabled ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-300'}`}>
-            Select Project / प्रकल्प निवडा:
-            {isProjectDisabled && <span className="ml-2 text-xs text-gray-400">(Project locked after extraction)</span>}
-          </label>
-          <CustomDropdown
-            placeholder="Select Project"
-            options={availableProjects.map(p => ({ label: p, value: p }))}
-            value={selectedProject}
-            onChange={setSelectedProject}
-            disabled={isProjectDisabled}
-            className="w-[350px]"
-          />
-        </div>
-
-        {/* Stepper code with navigation buttons */}
-        <div className="mb-10 w-full">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-slate-800 dark:to-slate-800 rounded-xl px-6 md:px-10 py-6 shadow-md border border-green-100 dark:border-slate-700 w-full">
-            <div className="flex items-center justify-between relative">
-              {steps.map((step, index) => {
-                const isActive = activeTab === step.key;
-                const isCompleted = isStepCompleted(step.key);
-
-                return (
-                  <div key={step.key} className="flex-1 flex flex-col items-center relative">
-
-                    {/* Connector Line */}
-                    {index !== 0 && (
-                      <div className="absolute top-4 left-[-50%] w-full h-[2px] z-0">
-                        <div
-                          className={`h-full transition-all duration-500 ${isCompleted || isActive
-                              ? 'bg-gradient-to-r from-green-400 to-emerald-500'
-                              : 'bg-gray-200 dark:bg-slate-600'
+                  return (
+                    <div key={step.key} className="flex flex-col">
+                      <button
+                        type="button"
+                        aria-current={isActive ? "step" : undefined}
+                        disabled={disabled}
+                        onClick={() => goToStep(step.key)}
+                        className={`group flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 ${
+                          isActive
+                            ? "border-2 border-[#09b556] bg-emerald-50/70 shadow-md shadow-emerald-900/5 ring-2 ring-[#09b556]/25 dark:border-emerald-500 dark:bg-emerald-950/35 dark:ring-emerald-500/30"
+                            : "border-2 border-transparent bg-slate-50/50 dark:bg-slate-700/30"
+                        } ${
+                          !disabled && !isActive
+                            ? "hover:border-slate-300 hover:bg-white dark:hover:border-slate-500 dark:hover:bg-slate-700/50"
+                            : ""
+                        } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                      >
+                        <span
+                          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border transition-colors ${
+                            isActive
+                              ? "border-emerald-200 bg-white text-[#09b556] shadow-sm dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-400"
+                              : isCompleted
+                                ? "border-emerald-200/80 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
+                                : "border-slate-200 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-500"
+                          }`}
+                        >
+                          {isCompleted ? (
+                            <Check className="h-7 w-7 stroke-[2.5]" aria-hidden />
+                          ) : (
+                            <StepIcon className="h-7 w-7" strokeWidth={1.75} aria-hidden />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block text-sm font-semibold leading-tight ${
+                              isActive
+                                ? "text-emerald-800 dark:text-emerald-300"
+                                : isCompleted
+                                  ? "text-emerald-700 dark:text-emerald-400"
+                                  : "text-slate-600 dark:text-slate-400"
                             }`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Circle */}
-                    <div
-                      onClick={() => {
-                        if (step.key === 'upload') setActiveTab('upload');
-                        else if (step.key === 'records' && allRecords.length > 0) setActiveTab('records');
-                        else if (step.key === 'mapping' && allRecords.length > 0) setActiveTab('mapping');
-                      }}
-                      className={`relative z-10 w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold transition-all duration-300 ${isActive
-                          ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white scale-105 shadow-md'
-                          : isCompleted
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-sm'
-                            : 'bg-green-100 text-green-600 dark:bg-slate-700 dark:text-gray-300'
-                        } ${(step.key === 'records' && allRecords.length === 0) ||
-                          (step.key === 'mapping' && allRecords.length === 0)
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'cursor-pointer'
-                        }`}
-                    >
-                      {isCompleted ? '✓' : index + 1}
+                          >
+                            {step.label}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                            {step.key === "upload" && "Spreadsheet upload"}
+                            {step.key === "records" && "Review extracted rows"}
+                            {step.key === "mapping" && "Link PDF documents"}
+                          </span>
+                        </span>
+                      </button>
+                      {index < steps.length - 1 && (
+                        <div
+                          className="flex justify-start py-5 pl-10"
+                          aria-hidden
+                        >
+                          <div
+                            className={`w-0.5 min-h-[52px] shrink-0 rounded-full ${
+                              isCompleted
+                                ? "bg-gradient-to-b from-emerald-400 to-emerald-600"
+                                : "bg-slate-200 dark:bg-slate-600"
+                            }`}
+                          />
+                        </div>
+                      )}
                     </div>
-
-                    {/* Label */}
-                    <span
-                      onClick={() => {
-                        if (step.key === 'upload') setActiveTab('upload');
-                        else if (step.key === 'records' && allRecords.length > 0) setActiveTab('records');
-                        else if (step.key === 'mapping' && allRecords.length > 0) setActiveTab('mapping');
-                      }}
-                      className={`mt-2 text-xs font-medium transition-all ${isActive
-                          ? 'text-green-700 dark:text-green-400'
-                          : isCompleted
-                            ? 'text-green-600 dark:text-green-300'
-                            : 'text-gray-500 dark:text-gray-500'
-                        } ${(step.key === 'records' && allRecords.length === 0) ||
-                          (step.key === 'mapping' && allRecords.length === 0)
-                          ? 'opacity-50 cursor-not-allowed'
-                          : 'cursor-pointer'
-                        }`}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              <div className="mt-auto pt-4 shrink-0 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
+                  style={{
+                    width:
+                      activeTab === "upload"
+                        ? "33%"
+                        : activeTab === "records"
+                          ? "66%"
+                          : "100%",
+                  }}
+                />
+              </div>
             </div>
+          </aside>
 
-            {/* Progress Bar */}
-            <div className="mt-4 h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
-                style={{
-                  width:
-                    activeTab === 'upload'
-                      ? '33%'
-                      : activeTab === 'records'
-                        ? '66%'
-                        : '100%',
-                }}
-              />
-            </div>
-          </div>
-        </div>
+          {/* Right: project row fixed; only inner stage area scrolls */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
+              {/* Shared horizontal inset: padding on wrapper, scroll uses inner only so scrollbar does not steal width vs project */}
+              <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-6">
+                <div className="relative mb-6 shrink-0 w-full" style={{ zIndex: 100 }}>
+                  <label className={`mb-1 block text-sm font-medium ${isProjectDisabled ? "text-gray-400 dark:text-gray-500" : "text-slate-700 dark:text-slate-300"}`}>
+                    Select Project / प्रकल्प निवडा:
+                    {isProjectDisabled && <span className="ml-2 text-xs text-gray-400">(Project locked after extraction)</span>}
+                  </label>
+                  <CustomDropdown
+                    placeholder="Select Project"
+                    options={availableProjects.map(p => ({ label: p, value: p }))}
+                    value={selectedProject}
+                    onChange={setSelectedProject}
+                    disabled={isProjectDisabled}
+                    className="w-full max-w-full"
+                  />
+                </div>
 
+                <div
+                  className={`flex min-h-0 w-full flex-1 flex-col overflow-x-hidden overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+                    activeTab === "records" ? "overflow-hidden" : "overflow-y-auto"
+                  }`}
+                >
         {/* Stage 1: Upload Tab */}
         {activeTab === 'upload' && (
           // <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-6">
@@ -783,29 +837,28 @@ export default function Home() {
           //     </div>
           //   )}
           // </div>
-          <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-6">
-            <div className="space-y-2">
-              <label className="block font-semibold text-[#121212] text-[16px]">Attachments</label>
+          <div className="space-y-2">
+              <label className="block font-semibold text-[#121212] dark:text-slate-100 text-[16px]">Attachments</label>
 
               {/* Drop Area */}
               <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleFileDrop}
                 onClick={() => document.getElementById('file-upload')?.click()}
-                className="w-full rounded-xl border-2 border-dashed border-[#e4e4e4] bg-[#fafafa]/50 transition-all p-6 flex flex-col items-center justify-center gap-3 cursor-pointer"
+                className="w-full rounded-lg border border-dotted border-slate-500/45 dark:border-slate-400/55 bg-transparent transition-all p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-slate-500/70 dark:hover:border-slate-400/80"
               >
                 <div className="w-8 h-8 flex items-center justify-center text-[#09b556]">
                   <MdOutlineFileUpload size={24} />
                 </div>
                 <div className="text-center space-y-0.5">
-                  <p className="text-[12px] font-semibold text-[#121212]">Drag and drop files here,</p>
-                  <p className="text-[12px] font-semibold text-[#121212]">or <span className="text-[#121212] font-semibold">click to browse</span></p>
-                  <p className="text-[10px] text-[#636363] pt-1">PDF, DOCX, JPG, PNG, up to 500kb each</p>
+                  <p className="text-[12px] font-semibold text-[#121212] dark:text-slate-100">Drag and drop files here,</p>
+                  <p className="text-[12px] font-semibold text-[#121212] dark:text-slate-100">or <span className="font-semibold">click to browse</span></p>
+                  <p className="text-[10px] text-[#636363] dark:text-slate-400 pt-1">Excel only (.xlsx, .xls) — one file; choosing again replaces it</p>
                 </div>
                 <input
                   id="file-upload"
                   type="file"
-                  multiple
+                  accept={EXCEL_ACCEPT}
                   className="hidden"
                   onChange={handleFileSelect}
                 />
@@ -815,8 +868,19 @@ export default function Home() {
               {files.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-2">
                   {files.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 bg-[#f0f9ff] border border-[#bae6fd] px-3 py-1 rounded-full text-[12px] text-[#0369a1]">
-                      <span className="truncate max-w-[150px]">{file.name}</span>
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full text-[12px] text-[#0369a1] bg-[#f0f9ff] border border-[#bae6fd] dark:bg-sky-950/40 dark:border-sky-800 dark:text-sky-200"
+                    >
+                      <span className="truncate max-w-[200px]">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFileAt(index)}
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[#0369a1] hover:bg-sky-200/80 dark:text-sky-200 dark:hover:bg-sky-800/80 transition-colors"
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -839,109 +903,147 @@ export default function Home() {
                   Export
                 </button>
               </div>
-            </div>
           </div>
         )}
 
         {/* Stage 1: Records Tab */}
         {activeTab === 'records' && (
-          <>
-            <div className="mb-6 border border-indigo-200/50 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-slate-800 dark:text-slate-300 shadow-md shadow-indigo-100/40 rounded-xl p-4">
-              <div className="text-center">
-                <h2 className="text-xl font-bold mb-1">{TEXT.title}</h2>
-                <p className="text-slate-700/80 dark:text-slate-400/80 text-sm font-medium leading-tight mb-0.5">{TEXT.branch}</p>
-                <p className="text-slate-700/80 dark:text-slate-400/80 text-sm font-medium leading-tight">{TEXT.projectName}</p>
-                {allRecords.length > 0 && <p className="text-slate-600 dark:text-slate-400 text-sm mt-2">Total Records: {allRecords.length} from {sheetsList.length} sheets</p>}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {allRecords.length > 0 && (
+              <div className="sticky top-0 z-[70] mb-3 shrink-0 border-b border-slate-200/80 bg-transparent py-1.5 text-left dark:border-slate-600">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  Total Records: {allRecords.length} from {sheetsList.length} sheets
+                </p>
               </div>
-            </div>
+            )}
             {allRecords.length > 0 ? (
               <>
-                <div className="mb-6 border-0 shadow-xl bg-[#FAFAFA] dark:bg-slate-800 rounded-xl">
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap p-4 w-full relative">
-                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 shrink-0">Search:</span>
-                    <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-[#F7F7F7] dark:bg-slate-700 focus-within:bg-[#FAFAFA] dark:focus-within:bg-slate-600 focus-within:ring-2 focus-within:ring-slate-300 transition-colors relative">
-                      <div className="relative flex-1 h-full min-w-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                        <input type="text" placeholder="Search documents..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-full pl-9 pr-3 text-sm bg-transparent border-0 focus:outline-none focus:ring-0 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 rounded-l-lg" />
-                      </div>
-                      <div className="relative" ref={columnMenuRef}>
-                        <button onClick={(e) => { e.stopPropagation(); setColumnMenuOpen(!columnMenuOpen); }} className="flex items-center justify-between gap-1.5 px-3 h-full border-l border-slate-200 dark:border-slate-600 hover:bg-[#F0F0F0] dark:hover:bg-slate-600 transition-colors focus:outline-none shrink-0 bg-transparent cursor-pointer rounded-r-lg text-sm text-slate-600 dark:text-slate-300 min-w-[110px]">
-                          <span className="truncate max-w-[80px]">{searchColumns.length === availableColumns.length ? "All" : `${searchColumns.length} Selected`}</span>
-                          <ChevronDown className="h-4 w-4 text-slate-400" />
-                        </button>
-                        {columnMenuOpen && (
-                          <div className="absolute right-0 mt-1 w-48 z-[9999] bg-[#FAFAFA] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-md py-1">
-                            {availableColumns.map(col => (<div key={col} onClick={() => toggleColumn(col)} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F0F0F0] dark:hover:bg-slate-700"><Check className={`h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-slate-600" : "opacity-0"}`} />{col}</div>))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 text-left text-[14px] relative">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
-                      <div className="relative" style={{ zIndex: 9998 }}><CustomDropdown placeholder="Select Shelf No" options={["1", "2", "3", "4"].map(o => ({ label: o, value: o }))} value="" onChange={() => { }} className="w-[180px]" /></div>
-                      <div className="relative" style={{ zIndex: 9997 }}><CustomDropdown placeholder="Select Gattha No" options={sheetsList.map(s => ({ label: s.name, value: s.name }))} value="" onChange={() => { }} className="w-[150px]" showSearch={true} /></div>
-                      <div className="relative" style={{ zIndex: 9996 }}><CustomDropdown placeholder="Select Mahitiche Vargikaran" options={["अ", "ब", "क", "ड"].map(o => ({ label: o, value: o }))} value="" onChange={() => { }} className="w-[140px]" /></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="border-0 shadow-xl bg-[#FAFAFA] dark:bg-slate-800 rounded-xl overflow-hidden">
-                  <div className="mt-4 border-t border-slate-100 dark:border-slate-700 bg-[#F7F7F7]/30 dark:bg-slate-800/50">
-                    <div className="max-h-[600px] overflow-auto relative rounded-b-xl">
-                      <table className="w-full border-collapse text-sm">
-                        <thead className="sticky top-0 z-[100] bg-gradient-to-r from-blue-50/95 to-indigo-50/95 dark:from-slate-800 dark:to-slate-800 backdrop-blur-md shadow-sm border-b border-indigo-100 dark:border-slate-700">
-                          <tr className="text-slate-800 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
-                            <th className="p-4 align-middle whitespace-nowrap text-center">अ.क्र</th><th className="p-4 align-middle whitespace-nowrap text-center">शेल्फ क्र.</th><th className="p-4 align-middle whitespace-nowrap text-center">गट्टा क्र.</th><th className="p-4 align-middle whitespace-nowrap text-center">नस्ती क्रमांक</th><th className="p-4 align-middle whitespace-nowrap text-center">संदर्भ क्र.</th><th className="p-4 align-middle min-w-[280px] text-left">विषय</th>
-                            <th colSpan={2} className="p-4 align-middle text-center border-x border-indigo-100/50 dark:border-slate-700 bg-indigo-100/30 dark:bg-slate-700/50">नस्ती बंद करताना त्यामागील पृष्ठ</th>
-                            <th className="p-4 align-middle whitespace-nowrap text-center">माहितीचे वर्गीकरण</th><th className="p-4 align-middle whitespace-nowrap text-center">नस्ती नष्ट करण्याचा दिनांक</th>
-                            <th colSpan={2} className="p-4 align-middle text-center border-x border-indigo-100/50 dark:border-slate-700 bg-indigo-100/30 dark:bg-slate-700/50">व्यक्तीची सही</th>
-                            <th className="p-4 align-middle min-w-[200px] text-left">शेरा</th><th className="p-4 align-middle whitespace-nowrap text-center">पृष्ठ क्र.</th><th className="p-4 align-middle whitespace-nowrap text-center">View</th>
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-0 bg-[#FAFAFA] dark:bg-slate-800">
+                  <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-[#F7F7F7]/30 dark:border-slate-700 dark:bg-slate-800/50">
+                    <div className="min-h-0 flex-1 overflow-auto rounded-b-xl">
+                      <table className="w-max min-w-full border-separate border-spacing-0 text-sm">
+                        <thead>
+                          <tr className="text-xs font-bold uppercase leading-none tracking-wider text-slate-800 dark:text-slate-300">
+                            <th className="sticky top-0 left-0 z-50 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-indigo-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98">
+                              अ.क्र
+                            </th>
+                            <th className="sticky top-0 left-[4.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98">
+                              शेल्फ क्र.
+                            </th>
+                            <th className="sticky top-0 left-[9.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98">
+                              गट्टा क्र.
+                            </th>
+                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                              नस्ती क्रमांक
+                            </th>
+                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                              संदर्भ क्र.
+                            </th>
+                            <th className="sticky top-0 z-40 min-w-[280px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                              विषय
+                            </th>
+                            <th colSpan={2} className="sticky top-0 z-40 border-b border-x border-indigo-100/50 bg-indigo-100/40 py-1.5 px-2 text-center align-middle whitespace-nowrap dark:border-slate-700 dark:bg-slate-700/60">
+                              नस्ती बंद करताना त्यामागील पृष्ठ
+                            </th>
+                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                              माहितीचे वर्गीकरण
+                            </th>
+                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                              नस्ती नष्ट करण्याचा दिनांक
+                            </th>
+                            <th colSpan={2} className="sticky top-0 z-40 border-b border-x border-indigo-100/50 bg-indigo-100/40 py-1.5 px-2 text-center align-middle whitespace-nowrap dark:border-slate-700 dark:bg-slate-700/60">
+                              व्यक्तीची सही
+                            </th>
+                            <th className="sticky top-0 z-40 min-w-[200px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                              शेरा
+                            </th>
+                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                              पृष्ठ क्र.
+                            </th>
                           </tr>
-                          <tr className="text-slate-700 dark:text-slate-400 text-[11px] uppercase tracking-wider bg-indigo-100/20 dark:bg-slate-700/30 border-t border-indigo-100/60 dark:border-slate-700">
-                            <th className="p-2"></th><th className="p-2"></th><th className="p-2"></th><th className="p-2"></th><th className="p-2"></th><th className="p-2"></th>
-                            <th className="p-2 text-center border-l bg-indigo-100/30 dark:bg-slate-700/50 border-indigo-100/50 dark:border-slate-700">टिपणी भाग</th>
-                            <th className="p-2 text-center border-r bg-indigo-100/30 dark:bg-slate-700/50 border-indigo-100/50 dark:border-slate-700">पत्रव्यवहार भाग</th><th className="p-2"></th><th className="p-2"></th>
-                            <th className="p-2 text-center border-l bg-indigo-100/30 dark:bg-slate-700/50 border-indigo-100/50 dark:border-slate-700">पाठविणा-या</th>
-                            <th className="p-2 text-center border-r bg-indigo-100/30 dark:bg-slate-700/50 border-indigo-100/50 dark:border-slate-700">स्वीकारणा-याची</th>
-                            <th className="p-2"></th><th className="p-2"></th><th className="p-2"></th>
+                          <tr className="bg-indigo-100/25 text-[11px] font-bold uppercase leading-snug tracking-wider text-slate-700 dark:bg-slate-700/35 dark:text-slate-400">
+                            <th className="sticky top-[calc(1.5rem+1px)] left-0 z-50 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-indigo-100/90 py-2 px-2 backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] left-[4.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-100/90 py-2 px-2 backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] left-[9.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-100/90 py-2 px-2 backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-l border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                              टिपणी भाग
+                            </th>
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-r border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                              पत्रव्यवहार भाग
+                            </th>
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-l border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                              पाठविणा-या
+                            </th>
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-r border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                              स्वीकारणा-याची
+                            </th>
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody>
                           {paginatedData.map((record) => (
-                            <tr key={record.id} className="group bg-[#FAFAFA] dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/50 transition-colors duration-200">
-                              <td className="p-4 text-center font-medium text-slate-700 dark:text-slate-300">{record.serialNo}</td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.shelfNo || '-'}</td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.bundleNo || '-'}</td>
-                              <td className="p-4 text-center"><span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#F0F0F0] dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200 dark:border-slate-600">{record.fileNo || '-'}</span></td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.refNo || '-'}</td>
-                              <td className="p-4"><div className="whitespace-pre-line break-words max-w-[300px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{record.subject}</div></td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-l border-slate-50 dark:border-slate-700">{record.notePages}</td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-r border-slate-50 dark:border-slate-700">{record.correspondencePages}</td>
-                              <td className="p-4 text-center"><span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${record.classification === 'अ' ? 'bg-amber-100 text-amber-700 border border-amber-200' : record.classification === 'ब' ? 'bg-blue-100 text-slate-600 border border-blue-200' : 'bg-[#F0F0F0] text-slate-700 border border-slate-200'}`}>{record.classification}</span></td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.destructionDate === 'कायम' ? <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">{record.destructionDate}</span> : record.destructionDate}</td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-l border-slate-50 dark:border-slate-700">{record.senderSignature || '-'}</td>
-                              <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-r border-slate-50 dark:border-slate-700">{record.receiverSignature || '-'}</td>
-                              <td className="p-4"><div className="whitespace-pre-line break-words max-w-[250px] text-slate-500 dark:text-slate-400 text-xs leading-relaxed">{record.remarks}</div></td>
-                              <td className="p-4 text-center font-medium text-slate-700 dark:text-slate-300">{record.pageRange}</td>
-                              <td className="p-4 text-center"><button onClick={() => setSelectedFile(record)} className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#FAFAFA] dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 shadow-sm hover:bg-indigo-50 dark:hover:bg-slate-600 hover:border-indigo-200 hover:text-slate-600 transition-all font-medium text-sm"><Eye className="w-4 h-4 mr-1.5 text-slate-400" />View</button></td>
+                            <tr key={record.id} className="group bg-[#FAFAFA] transition-colors duration-200 dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/50">
+                              <td className="sticky left-0 z-20 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-[#FAFAFA] p-4 text-center font-medium text-slate-700 group-hover:bg-indigo-50/60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700/80">
+                                {record.serialNo}
+                              </td>
+                              <td className="sticky left-[4.5rem] z-20 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-[#FAFAFA] p-4 text-center text-slate-600 group-hover:bg-indigo-50/60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700/80">
+                                {record.shelfNo || "-"}
+                              </td>
+                              <td className="sticky left-[9.5rem] z-20 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-[#FAFAFA] p-4 text-center text-slate-600 group-hover:bg-indigo-50/60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700/80">
+                                {record.bundleNo || "-"}
+                              </td>
+                              <td className="border-b border-slate-100 p-4 text-center dark:border-slate-700">
+                                <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-[#F0F0F0] px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                  {record.fileNo || "-"}
+                                </span>
+                              </td>
+                              <td className="border-b border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.refNo || "-"}</td>
+                              <td className="border-b border-slate-100 p-4 dark:border-slate-700">
+                                <div className="max-w-[300px] whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300">{record.subject}</div>
+                              </td>
+                              <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.notePages}</td>
+                              <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.correspondencePages}</td>
+                              <td className="border-b border-slate-100 p-4 text-center dark:border-slate-700">
+                                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${record.classification === "अ" ? "border border-amber-200 bg-amber-100 text-amber-700" : record.classification === "ब" ? "border border-blue-200 bg-blue-100 text-slate-600" : "border border-slate-200 bg-[#F0F0F0] text-slate-700"}`}>{record.classification}</span>
+                              </td>
+                              <td className="border-b border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">
+                                {record.destructionDate === "कायम" ? (
+                                  <span className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">{record.destructionDate}</span>
+                                ) : (
+                                  record.destructionDate
+                                )}
+                              </td>
+                              <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.senderSignature || "-"}</td>
+                              <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.receiverSignature || "-"}</td>
+                              <td className="border-b border-slate-100 p-4 dark:border-slate-700">
+                                <div className="max-w-[250px] whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400">{record.remarks}</div>
+                              </td>
+                              <td className="border-b border-slate-100 p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">{record.pageRange}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] dark:from-slate-800 dark:to-slate-800 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] px-6 py-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-800 sm:flex-row">
                     <div className="flex items-center gap-4">
                       <p className="text-sm text-slate-600 dark:text-slate-400">Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span> of <span className="font-medium">{filteredData.length}</span></p>
                       <div className="flex items-center gap-2"><span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span><select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="w-20 px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm">{[5, 10, 20, 50].map((value) => (<option key={value} value={value}>{value}</option>))}</select></div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm disabled:opacity-50 hover:bg-[#F7F7F7] dark:hover:bg-slate-600 transition-colors"><ChevronLeft className="h-4 w-4 inline" /> Prev</button>
-                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => { let pageNum; if (totalPages <= 5) pageNum = i + 1; else if (currentPage <= 3) pageNum = i + 1; else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i; else pageNum = currentPage - 2 + i; return (<button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`px-3 py-1.5 rounded-md text-sm transition-all ${currentPage === pageNum ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md" : "border border-slate-300 dark:border-slate-600 bg-[#FAFAFA] dark:bg-slate-700 hover:bg-[#F7F7F7] dark:hover:bg-slate-600"}`}>{pageNum}</button>); })}
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => { let pageNum; if (totalPages <= 5) pageNum = i + 1; else if (currentPage <= 3) pageNum = i + 1; else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i; else pageNum = currentPage - 2 + i; return (<button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`px-3 py-1.5 rounded-md text-sm transition-all ${currentPage === pageNum ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white" : "border border-slate-300 dark:border-slate-600 bg-[#FAFAFA] dark:bg-slate-700 hover:bg-[#F7F7F7] dark:hover:bg-slate-600"}`}>{pageNum}</button>); })}
                       <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm disabled:opacity-50 hover:bg-[#F7F7F7] dark:hover:bg-slate-600 transition-colors">Next <ChevronRight className="h-4 w-4 inline" /></button>
                     </div>
                   </div>
+                  </div>
                 </div>
-                <div className="mt-6 flex justify-between">
+                <div className="mt-4 flex shrink-0 justify-between">
                   <button
                     onClick={goToPreviousStep}
                     className="px-6 py-2.5 rounded-xl font-medium transition-all bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 shadow-sm flex items-center gap-2"
@@ -965,7 +1067,7 @@ export default function Home() {
                 <p className="text-gray-500 dark:text-gray-400">Please upload and process an Excel file first to see records here.</p>
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* Stage 2: PDF Mapping Tab */}
@@ -1026,32 +1128,13 @@ export default function Home() {
             </div>
           </div>
         )}
-      </main>
-
-      {/* View Record Dialog */}
-      {selectedFile && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={() => setSelectedFile(null)}>
-          <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Record Details</h3>
-                <button onClick={() => setSelectedFile(null)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">✕</button>
               </div>
-              <div className="space-y-3">
-                <div><span className="font-semibold">अ.क्र:</span> {selectedFile.serialNo}</div>
-                <div><span className="font-semibold">शेल्फ क्र.:</span> {selectedFile.shelfNo}</div>
-                <div><span className="font-semibold">गट्टा क्र.:</span> {selectedFile.bundleNo}</div>
-                <div><span className="font-semibold">नस्ती क्रमांक:</span> {selectedFile.fileNo}</div>
-                <div><span className="font-semibold">विषय:</span> {selectedFile.subject}</div>
-                <div><span className="font-semibold">माहितीचे वर्गीकरण:</span> {selectedFile.classification}</div>
-                <div><span className="font-semibold">नस्ती नष्ट करण्याचा दिनांक:</span> {selectedFile.destructionDate}</div>
-                <div><span className="font-semibold">शेरा:</span> {selectedFile.remarks}</div>
-                <div><span className="font-semibold">पृष्ठ क्र.:</span> {selectedFile.pageRange}</div>
-              </div>
+            </div>
             </div>
           </div>
         </div>
-      )}
+      </main>
+
     </div>
   );
 }
