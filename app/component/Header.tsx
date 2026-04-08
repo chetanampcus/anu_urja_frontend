@@ -26,8 +26,9 @@ const Header = () => {
   useEffect(() => {
     const updateIndicatorStyle = () => {
       if (navRef.current) {
+        const tabsContainer = navRef.current.children[0] as HTMLElement;
         const index = tabs.findIndex(tab => tab.name === activeTab);
-        const el = navRef.current.children[index] as HTMLElement;
+        const el = tabsContainer.children[index] as HTMLElement;
         if (el) {
           setIndicatorStyle({
             left: el.offsetLeft,
@@ -48,23 +49,21 @@ const Header = () => {
   };
 
   return (
-    <div
-      style={{
-        width: '100%',
-        maxWidth: '95%',
-        height: '80px',
-        backgroundColor: '#fff',
-        borderRadius: '16px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-        border: '1px solid #eaeaea',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '0 40px',
-        margin: '8px auto 0',
-        zIndex: 1000,
-      }}
-    >
+    <div className="w-full relative z-[1000]">
+      <div className="max-w-[1600px] mx-auto px-4 pt-2">
+        <div
+          style={{
+            height: '80px',
+            backgroundColor: '#fff',
+            borderRadius: '16px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            border: '1px solid #eaeaea',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0 40px',
+          }}
+        >
       {/* LEFT: Logo + Tabs */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
         {/* Logo */}
@@ -123,17 +122,19 @@ const Header = () => {
           gap: '16px',
         }}
       >
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+        {/* <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
           <Bell size={22} />
         </button>
 
         <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
           <Settings size={22} />
-        </button>
+        </button> */}
 
         <ProfileMenu />
       </div>
     </div>
+  </div>
+</div>
   );
 };
 

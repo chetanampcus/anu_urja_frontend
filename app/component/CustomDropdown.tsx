@@ -18,6 +18,7 @@ interface CustomDropdownProps {
   onChange: (value: string) => void;
   showSearch?: boolean;
   className?: string;
+  disabled?: boolean;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -27,7 +28,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   value,
   onChange,
   showSearch = false,
-  className = ''
+  className = '',
+  disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,8 +58,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       <div className="relative">
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-full h-10 bg-white border border-[#e4e4e4] rounded-[10px] px-4 flex items-center justify-between transition-all focus:outline-none font-normal`}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
+          className={`w-full h-10 bg-white border border-[#e4e4e4] rounded-[10px] px-4 flex items-center justify-between transition-all focus:outline-none font-normal ${disabled ? 'opacity-60 cursor-not-allowed bg-[#f9fafb]' : ''}`}
         >
           <span className={`text-[14px] ${selectedOption ? 'text-[#121212]' : 'text-[#636363]'}`}>
             {selectedOption ? (

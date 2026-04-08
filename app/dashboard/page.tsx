@@ -25,56 +25,9 @@ import {
   CommandList,
 } from "../component/command"
 import CustomDropdown from "../component/CustomDropdown"
+import Header from "../component/Header"
 
-function SearchableFilter({ placeholder, options, className, value: propValue, onChange }: { placeholder: string; options: string[], className?: string, value?: string, onChange?: (val: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const [internalValue, setInternalValue] = useState("")
-  
-  const value = propValue !== undefined ? propValue : internalValue;
-  
-  const handleSetValue = (val: string) => {
-    setInternalValue(val);
-    if (onChange) onChange(val);
-  }
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button className={`flex h-10 min-w-0 rounded-md bg-[#F7F7F7] border border-slate-200 hover:bg-[#FAFAFA] transition-colors cursor-pointer items-center justify-between px-3 text-slate-600 outline-none focus:bg-[#FAFAFA] focus:ring-2 focus:ring-slate-300 data-[state=open]:bg-[#FAFAFA] data-[state=open]:ring-2 data-[state=open]:ring-slate-300 data-[state=open]:border-slate-300 ${className || "flex-1"}`}>
-          <span className="flex-1 tracking-[0.01em] leading-5 truncate text-left">
-            {value ? value : placeholder}
-          </span>
-          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 ml-2" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0 z-[999] bg-[#FAFAFA] border-slate-200 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-xl overflow-hidden" align="start">
-        <Command className="bg-[#FAFAFA]">
-          <div className="border-b border-slate-100">
-            <CommandInput placeholder="Search..." className="h-10 bg-transparent" />
-          </div>
-          <CommandList className="bg-[#FAFAFA] p-1.5">
-            <CommandEmpty className="py-4 text-center text-sm text-slate-500">No results found.</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option}
-                  value={option}
-                  onSelect={(currentValue) => {
-                    handleSetValue(currentValue === option.toLowerCase() ? "" : option)
-                    setOpen(false)
-                  }}
-                  className="rounded-lg py-2 cursor-pointer flex justify-center text-slate-700 aria-selected:bg-[#F0F0F0] data-[selected=true]:bg-[#F0F0F0] hover:bg-[#F0F0F0] transition-colors mb-0.5 last:mb-0"
-                >
-                  <span className="truncate font-medium">{option}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  )
-}
+// Replaced SearchableFilter with CustomDropdown
 
 interface FileRecord {
   id: number
@@ -344,32 +297,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#FAFAFA]/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-gray-300">
-              <img
-                src="/gov.png" // place your PNG inside /public folder
-                alt="Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-semibold text-slate-800">{TEXT.title}</h1>
-              <p className="text-xs text-slate-500">Document Management System</p>
-            </div>
-          </div>
-          <nav className="flex items-center gap-8 ml-auto mr-2">
-            <Link href="/" className="relative text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors tracking-wide">
-              Upload Records
-            </Link>
-            <Link href="/dashboard" className="relative text-sm font-semibold text-slate-800 tracking-wide after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-indigo-600 after:to-blue-600 after:rounded-full">
-              View Records
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-[1600px] mx-auto px-4 py-6">
         
@@ -378,12 +306,12 @@ export default function DashboardPage() {
           <label className="block text-sm font-medium mb-1 text-slate-700">
             Select Project / प्रकल्प निवडा:
           </label>
-          <SearchableFilter
+          <CustomDropdown
             placeholder="Select Project"
-            options={availableProjects}
+            options={availableProjects.map(p => ({ label: p, value: p }))}
             value={selectedProject}
             onChange={setSelectedProject}
-            className="w-[350px] bg-white"
+            className="w-[350px]"
           />
         </div>
 
@@ -447,13 +375,6 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3 shrink-0 text-left text-[14px]">
                 <span className="text-sm font-medium text-slate-600">Filters:</span>
 
-                {/* Department */}
-                {/* <SearchableFilter
-                  placeholder="Select Shelf No"
-                  options={["1", "2", "3", "4"]}
-                  className="w-[180px]"
-                /> */}
-
                 <CustomDropdown
                   placeholder="Select a Shelf No"
                   options={[
@@ -468,17 +389,25 @@ export default function DashboardPage() {
                 />
 
                 {/* Set Priority */}
-                <SearchableFilter
-                  placeholder="Select Gattha No "
-                  options={["a-1", "a-2", "b-3", "d-4"]}
+                <CustomDropdown
+                  placeholder="Select Gattha No"
+                  options={Array.from({ length: 4 }).map((_, i) => ({ label: `${i + 1}`, value: `${i + 1}` }))}
+                  value=""
+                  onChange={() => {}}
                   className="w-[150px]"
                 />
 
-                {/* Type */}
-                <SearchableFilter
-                  placeholder="Select Mahitiche Vargikaran"
-                  options={["a", "b", "c", "d"]}
-                  className="w-[140px]"
+                {/* Set Priority */}
+                <CustomDropdown
+                  placeholder="Select Priority"
+                  options={[
+                    { label: "High", value: "High" },
+                    { label: "Medium", value: "Medium" },
+                    { label: "Low", value: "Low" }
+                  ]}
+                  value=""
+                  onChange={() => {}}
+                  className="w-[150px]"
                 />
 
               </div>

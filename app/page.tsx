@@ -6,7 +6,8 @@ import * as XLSX from 'xlsx';
 import Link from "next/link";
 import { Search, ChevronDown, Eye, ChevronLeft, ChevronRight, Check, Upload, FileText, Link as LinkIcon, CheckCircle, AlertCircle, Loader2, UploadCloud } from "lucide-react";
 import Header from "./component/Header";
-
+import CustomDropdown from "./component/CustomDropdown";
+import { MdOutlineFileUpload } from "react-icons/md";
 // ==================== Types & Interfaces ====================
 interface FileRecord {
   id: string;
@@ -46,80 +47,7 @@ interface PDFMapping {
 
 // ==================== Helper Components ====================
 
-// Searchable Filter Component
-function SearchableFilter({ placeholder, options, className, value, onChange, disabled }: { placeholder: string; options: string[], className?: string; value?: string; onChange?: (value: string) => void; disabled?: boolean }) {
-  const [open, setOpen] = useState(false);
-  const [internalValue, setInternalValue] = useState(value || "");
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleSelect = (option: string) => {
-    if (disabled) return;
-    const newValue = internalValue === option ? "" : option;
-    setInternalValue(newValue);
-    if (onChange) onChange(newValue);
-    setOpen(false);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div ref={dropdownRef} className={`relative ${className || "flex-1"}`} style={{ zIndex: 9999 }}>
-      <button
-        onClick={() => !disabled && setOpen(!open)}
-        disabled={disabled}
-        className={`flex h-10 min-w-0 w-full rounded-md border transition-colors cursor-pointer items-center justify-between px-3 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-slate-300 ${
-          disabled 
-            ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-60'
-            : 'bg-[#F7F7F7] dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-[#FAFAFA] dark:hover:bg-slate-600 focus:bg-[#FAFAFA] dark:focus:bg-slate-600'
-        }`}
-      >
-        <span className="flex-1 tracking-[0.01em] leading-5 truncate text-left">
-          {internalValue || placeholder}
-        </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 ml-2" />
-      </button>
-      {open && !disabled && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-[#FAFAFA] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-[9999] max-h-60 overflow-auto">
-          <div className="p-1 sticky top-0 bg-[#FAFAFA] dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full p-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg bg-[#FAFAFA] dark:bg-slate-700"
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => {
-                const search = e.target.value.toLowerCase();
-                const items = document.querySelectorAll(`.filter-option-${placeholder.replace(/\s/g, '')}`);
-                items.forEach(item => {
-                  const text = item.textContent?.toLowerCase() || '';
-                  (item as HTMLElement).style.display = text.includes(search) ? 'block' : 'none';
-                });
-              }}
-            />
-          </div>
-          <div className="p-1">
-            {options.map((option) => (
-              <div
-                key={option}
-                className={`filter-option-${placeholder.replace(/\s/g, '')} px-3 py-2 text-sm cursor-pointer hover:bg-[#F0F0F0] dark:hover:bg-slate-700 rounded-lg ${internalValue === option ? 'bg-indigo-50 dark:bg-indigo-900/50 text-slate-600 dark:text-slate-400' : ''}`}
-                onClick={() => handleSelect(option)}
-              >
-                {option}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+// // Internal components have been outsourced to component folder
 
 // Logs Panel Component
 function LogsPanel({ logs, darkMode }: { logs: LogEntry[]; darkMode: boolean }) {
@@ -152,9 +80,8 @@ function LogsPanel({ logs, darkMode }: { logs: LogEntry[]; darkMode: boolean }) 
           logs.map((log: LogEntry) => (
             <div
               key={log.id}
-              className={`text-sm py-1.5 px-2 rounded transition-all duration-200 ${
-                darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
-              }`}
+              className={`text-sm py-1.5 px-2 rounded transition-all duration-200 ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
+                }`}
             >
               <span className="mr-2">{getLogIcon(log.type)}</span>
               <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{log.message}</span>
@@ -192,9 +119,8 @@ function MappingLogger({ logs, darkMode }: { logs: string[]; darkMode: boolean }
           logs.map((log, index) => (
             <div
               key={index}
-              className={`text-sm py-1.5 px-2 rounded transition-all duration-200 ${
-                darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
-              }`}
+              className={`text-sm py-1.5 px-2 rounded transition-all duration-200 ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
+                }`}
             >
               <span className="mr-2">📄</span>
               <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{log}</span>
@@ -276,13 +202,12 @@ function FileUpload({ onFilesSelected, isProcessing, darkMode }: { onFilesSelect
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${
-        isDragOver
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : darkMode
+      className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${isDragOver
+        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+        : darkMode
           ? 'border-gray-600 hover:border-gray-500 bg-gray-800'
           : 'border-gray-300 hover:border-gray-400 bg-gray-50'
-      } ${isProcessing ? 'opacity-50 pointer-events-none' : ''}`}
+        } ${isProcessing ? 'opacity-50 pointer-events-none' : ''}`}
     >
       <input
         type="file"
@@ -348,14 +273,33 @@ export default function Home() {
 
   const allChecked = checks.every(Boolean);
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
       setFiles(prev => [...prev, ...selectedFiles]);
     }
   };
 
-    const handleFileDrop = (e: React.DragEvent) => {
+  // Clears all selected files
+  const handleCancelFiles = () => {
+    setFiles([]); // assuming you have a `files` state
+    setLogs([]); // optional: clear logs too
+    setProgress(0); // reset progress if needed
+  };
+
+  // Exports selected files
+  const handleExportFiles = () => {
+    if (files.length === 0) return;
+
+    // Example: create a ZIP of files or trigger download
+    // For simplicity, here we just log file names
+    console.log("Exporting files:", files.map(f => f.name));
+
+    // If you want, you can implement actual download logic:
+    // files.forEach(file => { ... })
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const droppedFiles = Array.from(e.dataTransfer.files);
     setFiles(prev => [...prev, ...droppedFiles]);
@@ -405,21 +349,21 @@ export default function Home() {
     if (allChecked) {
       setStage2Completed(true);
       setMappingLogs([]);
-      
+
       addLogToMapping(`🚀 Starting PDF Mapping Process for "${selectedProject}"...`);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       addLogToMapping(`📁 Scanning for PDF files in folder structure...`);
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       addLogToMapping(`📊 Found ${allRecords.length} records to map`);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       let mappedCount = 0;
       for (let i = 0; i < Math.min(allRecords.length, 15); i++) {
         const record = allRecords[i];
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         if (record.fileNo && record.fileNo !== '-') {
           addLogToMapping(`✅ Matched: ${record.fileNo}.pdf → Record #${record.serialNo} (${record.subject.substring(0, 40)}...)`);
           mappedCount++;
@@ -427,11 +371,11 @@ export default function Home() {
           addLogToMapping(`⚠️ No match found for record #${record.serialNo} (missing file number)`);
         }
       }
-      
+
       if (allRecords.length > 15) {
         addLogToMapping(`... and ${allRecords.length - 15} more records processed`);
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 500));
       addLogToMapping(`🎉 Mapping completed! ${mappedCount} out of ${allRecords.length} files matched successfully.`);
     }
@@ -485,22 +429,22 @@ export default function Home() {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
-          
+
           const allRecords: FileRecord[] = [];
           const sheets: { name: string; rowCount: number }[] = [];
           let globalSerialNo = 1;
-          
+
           for (const sheetName of workbook.SheetNames) {
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }) as any[][];
-            
-            const nonEmptyRows = jsonData.filter(row => 
+
+            const nonEmptyRows = jsonData.filter(row =>
               row && row.length > 0 && row.some(cell => cell && cell.toString().trim() !== '')
             );
-            
+
             let headers: string[] = [];
             let dataStartIndex = 0;
-            
+
             for (let idx = 0; idx < Math.min(nonEmptyRows.length, 10); idx++) {
               const row = nonEmptyRows[idx];
               const nonEmptyCount = row.filter(cell => cell && cell.toString().trim() !== '').length;
@@ -510,27 +454,27 @@ export default function Home() {
                 break;
               }
             }
-            
+
             if (headers.length === 0 && nonEmptyRows.length > 0) {
               const maxCols = Math.max(...nonEmptyRows.map(row => row.length));
               headers = Array.from({ length: maxCols }, (_, i) => `Column_${i + 1}`);
               dataStartIndex = 0;
             }
-            
+
             const dataRows = nonEmptyRows.slice(dataStartIndex);
-            
+
             sheets.push({
               name: sheetName,
               rowCount: dataRows.length
             });
-            
+
             dataRows.forEach((row, idx) => {
               const getValue = (key: string) => {
                 const colIndex = headers.findIndex(h => h.toLowerCase().includes(key.toLowerCase()));
                 if (colIndex !== -1 && row[colIndex]) return row[colIndex].toString();
                 return '-';
               };
-              
+
               allRecords.push({
                 id: `${sheetName}_row_${idx}`,
                 serialNo: globalSerialNo++,
@@ -550,7 +494,7 @@ export default function Home() {
               });
             });
           }
-          
+
           resolve({ records: allRecords, sheets });
         } catch (error) {
           console.error('Error extracting records:', error);
@@ -572,7 +516,7 @@ export default function Home() {
     setLogs([]);
     setAllRecords([]);
     setSheetsList([]);
-    
+
     addLog(`🚀 Starting processing of ${files.length} file(s)...`, 'info');
     addLog(`📁 Selected Project: ${selectedProject}`, 'info');
 
@@ -589,14 +533,14 @@ export default function Home() {
       addLog(`⏳ Processing: ${file.name} (${formatFileSize(file.size)})`, 'processing');
 
       const result = await extractAllRecordsFromExcel(file);
-      
+
       if (result.records.length > 0) {
         totalRecords += result.records.length;
         setAllRecords(prev => [...prev, ...result.records]);
         setSheetsList(prev => [...prev, ...result.sheets]);
-        
+
         addLog(`✅ Completed: ${file.name} - Found ${result.sheets.length} sheets with ${result.records.length} records`, 'success');
-        
+
         result.sheets.forEach((sheet, idx) => {
           addLog(`   ${idx + 1}. ${sheet.name} - ${sheet.rowCount.toLocaleString()} records imported successfully`, 'info');
         });
@@ -652,46 +596,29 @@ export default function Home() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-slate-900' : 'bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50'}`}>
       {/* Header */}
-      {/* <header className="sticky top-0 z-50 bg-[#FAFAFA]/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-gray-300">
-              <img
-                src="/gov.png" // place your PNG inside /public folder
-                alt="Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{TEXT.title}</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Document Management System</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 ml-auto">
-            <nav className="flex items-center gap-8 mr-4">
-              <Link href="/" className="relative text-sm font-semibold text-slate-800 dark:text-slate-100 tracking-wide after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-indigo-600 after:to-blue-600 after:rounded-full">
-                Upload Records
-              </Link>
-              <Link href="/dashboard" className="relative text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors tracking-wide">
-                View Records
-              </Link>
-            </nav>
-            {/* <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full hover:bg-[#F0F0F0] dark:hover:bg-slate-800 transition-colors shrink-0"
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button> /}
-          </div>
-        </div>
-      </header> */}
       <Header />
 
       <main className="max-w-[1600px] mx-auto px-4 py-6">
 
+        {/* Project Dropdown - Common for all tabs - Disabled after Stage 1 */}
+        <div className="mb-6 relative" style={{ zIndex: 100 }}>
+          <label className={`block text-sm font-medium mb-1 ${isProjectDisabled ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-300'}`}>
+            Select Project / प्रकल्प निवडा:
+            {isProjectDisabled && <span className="ml-2 text-xs text-gray-400">(Project locked after extraction)</span>}
+          </label>
+          <CustomDropdown
+            placeholder="Select Project"
+            options={availableProjects.map(p => ({ label: p, value: p }))}
+            value={selectedProject}
+            onChange={setSelectedProject}
+            disabled={isProjectDisabled}
+            className="w-[350px]"
+          />
+        </div>
+
         {/* Stepper code with navigation buttons */}
         <div className="mb-10 w-full">
-          <div className="bg-gradient-to-r from-[#FAFAFA] to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-xl px-6 md:px-10 py-6 shadow-md border border-indigo-100 dark:border-slate-700 w-full">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-slate-800 dark:to-slate-800 rounded-xl px-6 md:px-10 py-6 shadow-md border border-green-100 dark:border-slate-700 w-full">
             <div className="flex items-center justify-between relative">
               {steps.map((step, index) => {
                 const isActive = activeTab === step.key;
@@ -699,14 +626,16 @@ export default function Home() {
 
                 return (
                   <div key={step.key} className="flex-1 flex flex-col items-center relative">
+
                     {/* Connector Line */}
                     {index !== 0 && (
                       <div className="absolute top-4 left-[-50%] w-full h-[2px] z-0">
-                        <div className={`h-full transition-all duration-500 ${
-                          isCompleted || isActive
-                            ? 'bg-gradient-to-r from-slate-400 to-slate-500'
-                            : 'bg-gray-200 dark:bg-slate-600'
-                        }`} />
+                        <div
+                          className={`h-full transition-all duration-500 ${isCompleted || isActive
+                              ? 'bg-gradient-to-r from-green-400 to-emerald-500'
+                              : 'bg-gray-200 dark:bg-slate-600'
+                            }`}
+                        />
                       </div>
                     )}
 
@@ -717,13 +646,16 @@ export default function Home() {
                         else if (step.key === 'records' && allRecords.length > 0) setActiveTab('records');
                         else if (step.key === 'mapping' && allRecords.length > 0) setActiveTab('mapping');
                       }}
-                      className={`relative z-10 w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold cursor-pointer transition-all duration-300 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-slate-600 to-slate-800 text-white scale-105 shadow-md'
+                      className={`relative z-10 w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold transition-all duration-300 ${isActive
+                          ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white scale-105 shadow-md'
                           : isCompleted
-                            ? 'bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-sm'
-                            : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
-                      } ${(step.key === 'records' && allRecords.length === 0) || (step.key === 'mapping' && allRecords.length === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-sm'
+                            : 'bg-green-100 text-green-600 dark:bg-slate-700 dark:text-gray-300'
+                        } ${(step.key === 'records' && allRecords.length === 0) ||
+                          (step.key === 'mapping' && allRecords.length === 0)
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'cursor-pointer'
+                        }`}
                     >
                       {isCompleted ? '✓' : index + 1}
                     </div>
@@ -735,13 +667,16 @@ export default function Home() {
                         else if (step.key === 'records' && allRecords.length > 0) setActiveTab('records');
                         else if (step.key === 'mapping' && allRecords.length > 0) setActiveTab('mapping');
                       }}
-                      className={`mt-2 text-xs font-medium transition-all ${
-                        isActive
-                          ? 'text-slate-800 dark:text-slate-300'
+                      className={`mt-2 text-xs font-medium transition-all ${isActive
+                          ? 'text-green-700 dark:text-green-400'
                           : isCompleted
-                            ? 'text-slate-600 dark:text-slate-400'
+                            ? 'text-green-600 dark:text-green-300'
                             : 'text-gray-500 dark:text-gray-500'
-                      } ${(step.key === 'records' && allRecords.length === 0) || (step.key === 'mapping' && allRecords.length === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        } ${(step.key === 'records' && allRecords.length === 0) ||
+                          (step.key === 'mapping' && allRecords.length === 0)
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'cursor-pointer'
+                        }`}
                     >
                       {step.label}
                     </span>
@@ -753,77 +688,119 @@ export default function Home() {
             {/* Progress Bar */}
             <div className="mt-4 h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-slate-500 to-slate-700 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
                 style={{
-                  width: activeTab === 'upload' ? '33%' : activeTab === 'records' ? '66%' : '100%',
+                  width:
+                    activeTab === 'upload'
+                      ? '33%'
+                      : activeTab === 'records'
+                        ? '66%'
+                        : '100%',
                 }}
               />
             </div>
-
-            {/* Navigation Buttons */}
-            {/* <div className="flex justify-between mt-4">
-              <button
-                onClick={goToPreviousStep}
-                disabled={activeTab === 'upload'}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === 'upload'
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                    : 'bg-indigo-100 text-slate-600 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-slate-400 dark:hover:bg-indigo-900/50'
-                }`}
-              >
-                ← Previous
-              </button>
-              <button
-                onClick={goToNextStep}
-                disabled={(activeTab === 'upload' && allRecords.length === 0) || (activeTab === 'records' && allRecords.length === 0)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  (activeTab === 'upload' && allRecords.length === 0) || (activeTab === 'records' && allRecords.length === 0)
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
-                }`}
-              >
-                Next →
-              </button>
-            </div> */}
           </div>
-        </div>
-
-        {/* Project Dropdown - Common for all tabs - Disabled after Stage 1 */}
-        <div className="mb-6 relative" style={{ zIndex: 100 }}>
-          <label className={`block text-sm font-medium mb-1 ${isProjectDisabled ? 'text-gray-400 dark:text-gray-500' : 'text-slate-700 dark:text-slate-300'}`}>
-            Select Project / प्रकल्प निवडा:
-            {isProjectDisabled && <span className="ml-2 text-xs text-gray-400">(Project locked after extraction)</span>}
-          </label>
-          <SearchableFilter
-            placeholder="Select Project"
-            options={availableProjects}
-            value={selectedProject}
-            onChange={setSelectedProject}
-            disabled={isProjectDisabled}
-            className="w-[350px]"
-          />
         </div>
 
         {/* Stage 1: Upload Tab */}
         {activeTab === 'upload' && (
+          // <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-6">
+          //   {/* <FileUpload onFilesSelected={handleFilesSelected} isProcessing={isProcessing} darkMode={darkMode} /> */}
+          //   <div className="space-y-2">
+          //     <label className="block font-semibold text-[#121212] text-[16px]">Attachments</label>
+          //     <div className="relative group">
+          //       <div
+          //         onDragOver={(e) => e.preventDefault()}
+          //         onDrop={handleFileDrop}
+          //         onClick={() => document.getElementById('file-upload')?.click()}
+          //         className="w-full rounded-xl border-2 border-dashed border-[#e4e4e4] bg-[#fafafa]/50 transition-all p-8 flex flex-col items-center justify-center gap-3 cursor-pointer">
+          //         <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-[#09b556] group-hover:scale-110 transition-transform">
+          //           <UploadCloud size={32} strokeWidth={1.5} />
+          //         </div>
+          //         <div className="text-center space-y-0.5">
+          //           <p className="text-[12px] font-semibold text-[#121212]">Drag and drop files here,</p>
+          //           <p className="text-[12px] font-semibold text-[#121212]">or <span className="text-[#121212] font-semibold">click to browse</span></p>
+          //           <p className="text-[10px] text-[#636363] pt-1">PDF, DOCX, JPG, PNG, up to 500kb each</p>
+          //         </div>
+          //       </div>
+          //       <input
+          //         id="file-upload"
+          //         type="file"
+          //         multiple
+          //         className="hidden"
+          //         onChange={handleFileSelect}
+          //       />
+          //     </div>
+
+          //     {files.length > 0 && (
+          //       <div className="flex flex-wrap gap-2 pt-2">
+          //         {files.map((file, index) => (
+          //           <div key={index} className="flex items-center gap-2 bg-[#f0f9ff] border border-[#bae6fd] px-3 py-1 rounded-full text-[12px] text-[#0369a1]">
+          //             <span className="truncate max-w-[150px]">{file.name}</span>
+          //             {/* <button onClick={() => removeFile(index)} className="hover:text-red-500 font-bold">×</button> */}
+          //           </div>
+          //         ))}
+          //       </div>
+          //     )}
+          //   </div>
+
+          //   {files.length > 0 && !isProcessing && (
+          //     <div className="mt-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-700/50">
+          //       <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">📎 Selected Files ({files.length})</h3>
+          //       <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+          //         {files.map((file, idx) => (
+          //           <div key={idx} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#FAFAFA] dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm">
+          //             <div className="flex items-center gap-2"><span>📊</span><span className="font-medium truncate">{file.name}</span></div>
+          //             <span className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</span>
+          //           </div>
+          //         ))}
+          //       </div>
+          //     </div>
+          //   )}
+          //   <div className="flex gap-3 mt-4">
+          //     <button onClick={processFiles} disabled={files.length === 0 || isProcessing} className={`px-5 py-2.5 rounded-lg font-medium transition-all transform active:scale-95 ${files.length === 0 || isProcessing ? 'bg-gray-300 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'}`}>
+          //       {isProcessing ? '⚙️ Processing...' : 'Extract Records'}
+          //     </button>
+          //   </div>
+          //   {(isProcessing || logs.length > 0) && (
+          //     <>
+          //       <ProgressBar progress={progress} darkMode={darkMode} />
+          //       <div className="space-y-2 mt-4">
+          //         {/* <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📝 Progress Log</h3> */}
+          //         <LogsPanel logs={logs} darkMode={darkMode} />
+          //       </div>
+          //     </>
+          //   )}
+          //   {allRecords.length > 0 && (
+          //     <div className="mt-6 flex justify-end">
+          //       <button
+          //         onClick={goToNextStep}
+          //         className="px-6 py-2.5 rounded-xl font-medium transition-all bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg flex items-center gap-2"
+          //       >
+          //         Proceed to Next Stage
+          //         <ChevronRight className="w-5 h-5" />
+          //       </button>
+          //     </div>
+          //   )}
+          // </div>
           <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-6">
-            {/* <FileUpload onFilesSelected={handleFilesSelected} isProcessing={isProcessing} darkMode={darkMode} /> */}
-             <div className="space-y-2">
+            <div className="space-y-2">
               <label className="block font-semibold text-[#121212] text-[16px]">Attachments</label>
-              <div className="relative group">
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleFileDrop}
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                  className="w-full rounded-xl border-2 border-dashed border-[#e4e4e4] bg-[#fafafa]/50 transition-all p-8 flex flex-col items-center justify-center gap-3 cursor-pointer">
-                  <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-[#09b556] group-hover:scale-110 transition-transform">
-                    <UploadCloud size={32} strokeWidth={1.5} />
-                  </div>
-                  <div className="text-center space-y-0.5">
-                    <p className="text-[12px] font-semibold text-[#121212]">Drag and drop files here,</p>
-                    <p className="text-[12px] font-semibold text-[#121212]">or <span className="text-[#121212] font-semibold">click to browse</span></p>
-                    <p className="text-[10px] text-[#636363] pt-1">PDF, DOCX, JPG, PNG, up to 500kb each</p>
-                  </div>
+
+              {/* Drop Area */}
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleFileDrop}
+                onClick={() => document.getElementById('file-upload')?.click()}
+                className="w-full rounded-xl border-2 border-dashed border-[#e4e4e4] bg-[#fafafa]/50 transition-all p-6 flex flex-col items-center justify-center gap-3 cursor-pointer"
+              >
+                <div className="w-8 h-8 flex items-center justify-center text-[#09b556]">
+                  <MdOutlineFileUpload size={24} />
+                </div>
+                <div className="text-center space-y-0.5">
+                  <p className="text-[12px] font-semibold text-[#121212]">Drag and drop files here,</p>
+                  <p className="text-[12px] font-semibold text-[#121212]">or <span className="text-[#121212] font-semibold">click to browse</span></p>
+                  <p className="text-[10px] text-[#636363] pt-1">PDF, DOCX, JPG, PNG, up to 500kb each</p>
                 </div>
                 <input
                   id="file-upload"
@@ -834,56 +811,35 @@ export default function Home() {
                 />
               </div>
 
+              {/* Selected files preview */}
               {files.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-2">
                   {files.map((file, index) => (
                     <div key={index} className="flex items-center gap-2 bg-[#f0f9ff] border border-[#bae6fd] px-3 py-1 rounded-full text-[12px] text-[#0369a1]">
                       <span className="truncate max-w-[150px]">{file.name}</span>
-                      {/* <button onClick={() => removeFile(index)} className="hover:text-red-500 font-bold">×</button> */}
                     </div>
                   ))}
                 </div>
               )}
-            </div>
 
-            {files.length > 0 && !isProcessing && (
-              <div className="mt-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-700/50">
-                <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">📎 Selected Files ({files.length})</h3>
-                <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
-                  {files.map((file, idx) => (
-                    <div key={idx} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#FAFAFA] dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm">
-                      <div className="flex items-center gap-2"><span>📊</span><span className="font-medium truncate">{file.name}</span></div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="flex gap-3 mt-4">
-              <button onClick={processFiles} disabled={files.length === 0 || isProcessing} className={`px-5 py-2.5 rounded-lg font-medium transition-all transform active:scale-95 ${files.length === 0 || isProcessing ? 'bg-gray-300 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'}`}>
-                {isProcessing ? '⚙️ Processing...' : 'Extract Records'}
-              </button>
-            </div>
-            {(isProcessing || logs.length > 0) && (
-              <>
-                <ProgressBar progress={progress} darkMode={darkMode} />
-                <div className="space-y-2 mt-4">
-                  {/* <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📝 Progress Log</h3> */}
-                  <LogsPanel logs={logs} darkMode={darkMode} />
-                </div>
-              </>
-            )}
-            {allRecords.length > 0 && (
-              <div className="mt-6 flex justify-end">
-                <button 
-                  onClick={goToNextStep}
-                  className="px-6 py-2.5 rounded-xl font-medium transition-all bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg flex items-center gap-2"
+              {/* Buttons below drop area */}
+              {/* Buttons below drop area, aligned to the right */}
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={handleCancelFiles}
+                  className="px-4 py-2 rounded-lg bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
                 >
-                  Proceed to Next Stage
-                  <ChevronRight className="w-5 h-5" />
+                  Cancel
+                </button>
+                <button
+                  onClick={processFiles}
+                  className="px-4 py-2 rounded-lg bg-[#09B556] hover:bg-[#079c4a] text-white transition"
+                  disabled={files.length === 0}
+                >
+                  Export
                 </button>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -922,9 +878,9 @@ export default function Home() {
                     </div>
                     <div className="flex items-center gap-3 shrink-0 text-left text-[14px] relative">
                       <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
-                      <div className="relative" style={{ zIndex: 9998 }}><SearchableFilter placeholder="Select Shelf No" options={["1", "2", "3", "4"]} className="w-[180px]" /></div>
-                      <div className="relative" style={{ zIndex: 9997 }}><SearchableFilter placeholder="Select Gattha No" options={sheetsList.map(s => s.name)} className="w-[150px]" /></div>
-                      <div className="relative" style={{ zIndex: 9996 }}><SearchableFilter placeholder="Select Mahitiche Vargikaran" options={["अ", "ब", "क", "ड"]} className="w-[140px]" /></div>
+                      <div className="relative" style={{ zIndex: 9998 }}><CustomDropdown placeholder="Select Shelf No" options={["1", "2", "3", "4"].map(o => ({ label: o, value: o }))} value="" onChange={() => { }} className="w-[180px]" /></div>
+                      <div className="relative" style={{ zIndex: 9997 }}><CustomDropdown placeholder="Select Gattha No" options={sheetsList.map(s => ({ label: s.name, value: s.name }))} value="" onChange={() => { }} className="w-[150px]" showSearch={true} /></div>
+                      <div className="relative" style={{ zIndex: 9996 }}><CustomDropdown placeholder="Select Mahitiche Vargikaran" options={["अ", "ब", "क", "ड"].map(o => ({ label: o, value: o }))} value="" onChange={() => { }} className="w-[140px]" /></div>
                     </div>
                   </div>
                 </div>
@@ -976,7 +932,7 @@ export default function Home() {
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] dark:from-slate-800 dark:to-slate-800 border-t border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-4">
                       <p className="text-sm text-slate-600 dark:text-slate-400">Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span> of <span className="font-medium">{filteredData.length}</span></p>
-                      <div className="flex items-center gap-2"><span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span><select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="w-20 px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm">{ [5, 10, 20, 50].map((value) => (<option key={value} value={value}>{value}</option>)) }</select></div>
+                      <div className="flex items-center gap-2"><span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span><select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="w-20 px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm">{[5, 10, 20, 50].map((value) => (<option key={value} value={value}>{value}</option>))}</select></div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm disabled:opacity-50 hover:bg-[#F7F7F7] dark:hover:bg-slate-600 transition-colors"><ChevronLeft className="h-4 w-4 inline" /> Prev</button>
@@ -986,14 +942,14 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="mt-6 flex justify-between">
-                  <button 
+                  <button
                     onClick={goToPreviousStep}
                     className="px-6 py-2.5 rounded-xl font-medium transition-all bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 shadow-sm flex items-center gap-2"
                   >
                     <ChevronLeft className="w-5 h-5" />
                     Previous Stage
                   </button>
-                  <button 
+                  <button
                     onClick={goToNextStep}
                     className="px-6 py-2.5 rounded-xl font-medium transition-all bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg flex items-center gap-2"
                   >
@@ -1049,9 +1005,9 @@ export default function Home() {
                 <MappingLogger logs={mappingLogs} darkMode={darkMode} />
               </div>
             )}
-            
+
             <div className="mt-8 flex justify-between border-t border-slate-200 dark:border-slate-700 pt-6">
-              <button 
+              <button
                 onClick={goToPreviousStep}
                 className="px-6 py-2.5 rounded-xl font-medium transition-all bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 shadow-sm flex items-center gap-2"
               >
@@ -1059,7 +1015,7 @@ export default function Home() {
                 Previous Stage
               </button>
               {stage2Completed && (
-                <button 
+                <button
                   onClick={() => alert('Process Completed Successfully!')}
                   className="px-6 py-2.5 rounded-xl font-medium transition-all bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg flex items-center gap-2"
                 >
