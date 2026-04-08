@@ -36,7 +36,7 @@ export default function LogsPanel({ logs, darkMode }: LogsPanelProps) {
       case 'success': return darkMode ? 'text-green-400' : 'text-green-700';
       case 'error': return darkMode ? 'text-red-400' : 'text-red-700';
       case 'processing': return darkMode ? 'text-yellow-400' : 'text-yellow-600';
-      default: return darkMode ? 'text-blue-400' : 'text-blue-600';
+      default: return darkMode ? 'text-slate-400' : 'text-slate-600';
     }
   };
 

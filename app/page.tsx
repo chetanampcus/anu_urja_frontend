@@ -3,7 +3,9 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import * as XLSX from 'xlsx';
-import { Search, ChevronDown, Eye, ChevronLeft, ChevronRight, Check, Upload, FileText, Link, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Search, ChevronDown, Eye, ChevronLeft, ChevronRight, Check, Upload, FileText, Link as LinkIcon, CheckCircle, AlertCircle, Loader2, UploadCloud } from "lucide-react";
+import Header from "./component/Header";
 
 // ==================== Types & Interfaces ====================
 interface FileRecord {
@@ -76,7 +78,7 @@ function SearchableFilter({ placeholder, options, className, value, onChange, di
         className={`flex h-10 min-w-0 w-full rounded-md border transition-colors cursor-pointer items-center justify-between px-3 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-slate-300 ${
           disabled 
             ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-60'
-            : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-600 focus:bg-white dark:focus:bg-slate-600'
+            : 'bg-[#F7F7F7] dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-[#FAFAFA] dark:hover:bg-slate-600 focus:bg-[#FAFAFA] dark:focus:bg-slate-600'
         }`}
       >
         <span className="flex-1 tracking-[0.01em] leading-5 truncate text-left">
@@ -85,12 +87,12 @@ function SearchableFilter({ placeholder, options, className, value, onChange, di
         <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 ml-2" />
       </button>
       {open && !disabled && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-[9999] max-h-60 overflow-auto">
-          <div className="p-1 sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+        <div className="absolute top-full left-0 mt-1 w-full bg-[#FAFAFA] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-[9999] max-h-60 overflow-auto">
+          <div className="p-1 sticky top-0 bg-[#FAFAFA] dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
             <input
               type="text"
               placeholder="Search..."
-              className="w-full p-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+              className="w-full p-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg bg-[#FAFAFA] dark:bg-slate-700"
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => {
                 const search = e.target.value.toLowerCase();
@@ -106,7 +108,7 @@ function SearchableFilter({ placeholder, options, className, value, onChange, di
             {options.map((option) => (
               <div
                 key={option}
-                className={`filter-option-${placeholder.replace(/\s/g, '')} px-3 py-2 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg ${internalValue === option ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400' : ''}`}
+                className={`filter-option-${placeholder.replace(/\s/g, '')} px-3 py-2 text-sm cursor-pointer hover:bg-[#F0F0F0] dark:hover:bg-slate-700 rounded-lg ${internalValue === option ? 'bg-indigo-50 dark:bg-indigo-900/50 text-slate-600 dark:text-slate-400' : ''}`}
                 onClick={() => handleSelect(option)}
               >
                 {option}
@@ -343,7 +345,21 @@ export default function Home() {
   const [checks, setChecks] = useState([false, false, false, false]);
   const [stage2Completed, setStage2Completed] = useState(false);
   const [mappingLogs, setMappingLogs] = useState<string[]>([]);
+
   const allChecked = checks.every(Boolean);
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setFiles(prev => [...prev, ...selectedFiles]);
+    }
+  };
+
+    const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    setFiles(prev => [...prev, ...droppedFiles]);
+  };
 
   // Check if project dropdown should be disabled (after records are extracted)
   const isProjectDisabled = allRecords.length > 0;
@@ -634,33 +650,48 @@ export default function Home() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-slate-900' : 'bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50'}`}>
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
+      {/* <header className="sticky top-0 z-50 bg-[#FAFAFA]/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30">
-              <span className="text-white font-bold text-lg">N</span>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-gray-300">
+              <img
+                src="/gov.png" // place your PNG inside /public folder
+                alt="Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{TEXT.title}</h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">Document Management System</p>
             </div>
           </div>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
+          <div className="flex items-center gap-4 ml-auto">
+            <nav className="flex items-center gap-8 mr-4">
+              <Link href="/" className="relative text-sm font-semibold text-slate-800 dark:text-slate-100 tracking-wide after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-indigo-600 after:to-blue-600 after:rounded-full">
+                Upload Records
+              </Link>
+              <Link href="/dashboard" className="relative text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors tracking-wide">
+                View Records
+              </Link>
+            </nav>
+            {/* <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-full hover:bg-[#F0F0F0] dark:hover:bg-slate-800 transition-colors shrink-0"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button> /}
+          </div>
         </div>
-      </header>
+      </header> */}
+      <Header />
 
       <main className="max-w-[1600px] mx-auto px-4 py-6">
 
         {/* Stepper code with navigation buttons */}
-        <div className="mb-10">
-          <div className="bg-gradient-to-r from-white to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-xl px-6 py-4 shadow-md border border-indigo-100 dark:border-slate-700 max-w-4xl mx-auto">
+        <div className="mb-10 w-full">
+          <div className="bg-gradient-to-r from-[#FAFAFA] to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-xl px-6 md:px-10 py-6 shadow-md border border-indigo-100 dark:border-slate-700 w-full">
             <div className="flex items-center justify-between relative">
               {steps.map((step, index) => {
                 const isActive = activeTab === step.key;
@@ -673,7 +704,7 @@ export default function Home() {
                       <div className="absolute top-4 left-[-50%] w-full h-[2px] z-0">
                         <div className={`h-full transition-all duration-500 ${
                           isCompleted || isActive
-                            ? 'bg-gradient-to-r from-green-400 to-green-600'
+                            ? 'bg-gradient-to-r from-slate-400 to-slate-500'
                             : 'bg-gray-200 dark:bg-slate-600'
                         }`} />
                       </div>
@@ -688,9 +719,9 @@ export default function Home() {
                       }}
                       className={`relative z-10 w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold cursor-pointer transition-all duration-300 ${
                         isActive
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white scale-105 shadow-md'
+                          ? 'bg-gradient-to-r from-slate-600 to-slate-800 text-white scale-105 shadow-md'
                           : isCompleted
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm'
+                            ? 'bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-sm'
                             : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
                       } ${(step.key === 'records' && allRecords.length === 0) || (step.key === 'mapping' && allRecords.length === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
@@ -706,10 +737,10 @@ export default function Home() {
                       }}
                       className={`mt-2 text-xs font-medium transition-all ${
                         isActive
-                          ? 'text-blue-600 dark:text-blue-400'
+                          ? 'text-slate-800 dark:text-slate-300'
                           : isCompleted
-                            ? 'text-green-600'
-                            : 'text-gray-500 dark:text-gray-400'
+                            ? 'text-slate-600 dark:text-slate-400'
+                            : 'text-gray-500 dark:text-gray-500'
                       } ${(step.key === 'records' && allRecords.length === 0) || (step.key === 'mapping' && allRecords.length === 0) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {step.label}
@@ -722,7 +753,7 @@ export default function Home() {
             {/* Progress Bar */}
             <div className="mt-4 h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-slate-500 to-slate-700 transition-all duration-500"
                 style={{
                   width: activeTab === 'upload' ? '33%' : activeTab === 'records' ? '66%' : '100%',
                 }}
@@ -730,14 +761,14 @@ export default function Home() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between mt-4">
+            {/* <div className="flex justify-between mt-4">
               <button
                 onClick={goToPreviousStep}
                 disabled={activeTab === 'upload'}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'upload'
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50'
+                    : 'bg-indigo-100 text-slate-600 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-slate-400 dark:hover:bg-indigo-900/50'
                 }`}
               >
                 ← Previous
@@ -753,7 +784,7 @@ export default function Home() {
               >
                 Next →
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -775,14 +806,52 @@ export default function Home() {
 
         {/* Stage 1: Upload Tab */}
         {activeTab === 'upload' && (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6">
-            <FileUpload onFilesSelected={handleFilesSelected} isProcessing={isProcessing} darkMode={darkMode} />
+          <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-6">
+            {/* <FileUpload onFilesSelected={handleFilesSelected} isProcessing={isProcessing} darkMode={darkMode} /> */}
+             <div className="space-y-2">
+              <label className="block font-semibold text-[#121212] text-[16px]">Attachments</label>
+              <div className="relative group">
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleFileDrop}
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  className="w-full rounded-xl border-2 border-dashed border-[#e4e4e4] bg-[#fafafa]/50 transition-all p-8 flex flex-col items-center justify-center gap-3 cursor-pointer">
+                  <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-[#09b556] group-hover:scale-110 transition-transform">
+                    <UploadCloud size={32} strokeWidth={1.5} />
+                  </div>
+                  <div className="text-center space-y-0.5">
+                    <p className="text-[12px] font-semibold text-[#121212]">Drag and drop files here,</p>
+                    <p className="text-[12px] font-semibold text-[#121212]">or <span className="text-[#121212] font-semibold">click to browse</span></p>
+                    <p className="text-[10px] text-[#636363] pt-1">PDF, DOCX, JPG, PNG, up to 500kb each</p>
+                  </div>
+                </div>
+                <input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+              </div>
+
+              {files.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {files.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-[#f0f9ff] border border-[#bae6fd] px-3 py-1 rounded-full text-[12px] text-[#0369a1]">
+                      <span className="truncate max-w-[150px]">{file.name}</span>
+                      {/* <button onClick={() => removeFile(index)} className="hover:text-red-500 font-bold">×</button> */}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {files.length > 0 && !isProcessing && (
               <div className="mt-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-700/50">
                 <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">📎 Selected Files ({files.length})</h3>
                 <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
                   {files.map((file, idx) => (
-                    <div key={idx} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm">
+                    <div key={idx} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#FAFAFA] dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm">
                       <div className="flex items-center gap-2"><span>📊</span><span className="font-medium truncate">{file.name}</span></div>
                       <span className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</span>
                     </div>
@@ -792,14 +861,18 @@ export default function Home() {
             )}
             <div className="flex gap-3 mt-4">
               <button onClick={processFiles} disabled={files.length === 0 || isProcessing} className={`px-5 py-2.5 rounded-lg font-medium transition-all transform active:scale-95 ${files.length === 0 || isProcessing ? 'bg-gray-300 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'}`}>
-                {isProcessing ? '⚙️ Processing...' : '🚀 Extract Records'}
+                {isProcessing ? '⚙️ Processing...' : 'Extract Records'}
               </button>
             </div>
-            <ProgressBar progress={progress} darkMode={darkMode} />
-            <div className="space-y-2 mt-4">
-              <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📝 Progress Log</h3>
-              <LogsPanel logs={logs} darkMode={darkMode} />
-            </div>
+            {(isProcessing || logs.length > 0) && (
+              <>
+                <ProgressBar progress={progress} darkMode={darkMode} />
+                <div className="space-y-2 mt-4">
+                  {/* <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📝 Progress Log</h3> */}
+                  <LogsPanel logs={logs} darkMode={darkMode} />
+                </div>
+              </>
+            )}
             {allRecords.length > 0 && (
               <div className="mt-6 flex justify-end">
                 <button 
@@ -817,32 +890,32 @@ export default function Home() {
         {/* Stage 1: Records Tab */}
         {activeTab === 'records' && (
           <>
-            <div className="mb-6 border border-indigo-200/50 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-indigo-950 dark:text-indigo-200 shadow-md shadow-indigo-100/40 rounded-xl p-4">
+            <div className="mb-6 border border-indigo-200/50 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-slate-800 dark:text-slate-300 shadow-md shadow-indigo-100/40 rounded-xl p-4">
               <div className="text-center">
                 <h2 className="text-xl font-bold mb-1">{TEXT.title}</h2>
-                <p className="text-indigo-800/80 dark:text-indigo-300/80 text-sm font-medium leading-tight mb-0.5">{TEXT.branch}</p>
-                <p className="text-indigo-800/80 dark:text-indigo-300/80 text-sm font-medium leading-tight">{TEXT.projectName}</p>
-                {allRecords.length > 0 && <p className="text-indigo-600 dark:text-indigo-400 text-sm mt-2">Total Records: {allRecords.length} from {sheetsList.length} sheets</p>}
+                <p className="text-slate-700/80 dark:text-slate-400/80 text-sm font-medium leading-tight mb-0.5">{TEXT.branch}</p>
+                <p className="text-slate-700/80 dark:text-slate-400/80 text-sm font-medium leading-tight">{TEXT.projectName}</p>
+                {allRecords.length > 0 && <p className="text-slate-600 dark:text-slate-400 text-sm mt-2">Total Records: {allRecords.length} from {sheetsList.length} sheets</p>}
               </div>
             </div>
             {allRecords.length > 0 ? (
               <>
-                <div className="mb-6 border-0 shadow-xl bg-white dark:bg-slate-800 rounded-xl">
+                <div className="mb-6 border-0 shadow-xl bg-[#FAFAFA] dark:bg-slate-800 rounded-xl">
                   <div className="flex items-center gap-4 flex-wrap md:flex-nowrap p-4 w-full relative">
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400 shrink-0">Search:</span>
-                    <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus-within:bg-white dark:focus-within:bg-slate-600 focus-within:ring-2 focus-within:ring-slate-300 transition-colors relative">
+                    <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-[#F7F7F7] dark:bg-slate-700 focus-within:bg-[#FAFAFA] dark:focus-within:bg-slate-600 focus-within:ring-2 focus-within:ring-slate-300 transition-colors relative">
                       <div className="relative flex-1 h-full min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                         <input type="text" placeholder="Search documents..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-full pl-9 pr-3 text-sm bg-transparent border-0 focus:outline-none focus:ring-0 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 rounded-l-lg" />
                       </div>
                       <div className="relative" ref={columnMenuRef}>
-                        <button onClick={(e) => { e.stopPropagation(); setColumnMenuOpen(!columnMenuOpen); }} className="flex items-center justify-between gap-1.5 px-3 h-full border-l border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors focus:outline-none shrink-0 bg-transparent cursor-pointer rounded-r-lg text-sm text-slate-600 dark:text-slate-300 min-w-[110px]">
+                        <button onClick={(e) => { e.stopPropagation(); setColumnMenuOpen(!columnMenuOpen); }} className="flex items-center justify-between gap-1.5 px-3 h-full border-l border-slate-200 dark:border-slate-600 hover:bg-[#F0F0F0] dark:hover:bg-slate-600 transition-colors focus:outline-none shrink-0 bg-transparent cursor-pointer rounded-r-lg text-sm text-slate-600 dark:text-slate-300 min-w-[110px]">
                           <span className="truncate max-w-[80px]">{searchColumns.length === availableColumns.length ? "All" : `${searchColumns.length} Selected`}</span>
                           <ChevronDown className="h-4 w-4 text-slate-400" />
                         </button>
                         {columnMenuOpen && (
-                          <div className="absolute right-0 mt-1 w-48 z-[9999] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-md py-1">
-                            {availableColumns.map(col => (<div key={col} onClick={() => toggleColumn(col)} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"><Check className={`h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-indigo-600" : "opacity-0"}`} />{col}</div>))}
+                          <div className="absolute right-0 mt-1 w-48 z-[9999] bg-[#FAFAFA] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-md py-1">
+                            {availableColumns.map(col => (<div key={col} onClick={() => toggleColumn(col)} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F0F0F0] dark:hover:bg-slate-700"><Check className={`h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-slate-600" : "opacity-0"}`} />{col}</div>))}
                           </div>
                         )}
                       </div>
@@ -855,19 +928,19 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="border-0 shadow-xl bg-white dark:bg-slate-800 rounded-xl overflow-hidden">
-                  <div className="mt-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/50">
+                <div className="border-0 shadow-xl bg-[#FAFAFA] dark:bg-slate-800 rounded-xl overflow-hidden">
+                  <div className="mt-4 border-t border-slate-100 dark:border-slate-700 bg-[#F7F7F7]/30 dark:bg-slate-800/50">
                     <div className="max-h-[600px] overflow-auto relative rounded-b-xl">
                       <table className="w-full border-collapse text-sm">
                         <thead className="sticky top-0 z-[100] bg-gradient-to-r from-blue-50/95 to-indigo-50/95 dark:from-slate-800 dark:to-slate-800 backdrop-blur-md shadow-sm border-b border-indigo-100 dark:border-slate-700">
-                          <tr className="text-indigo-950 dark:text-indigo-200 font-bold text-xs uppercase tracking-wider">
+                          <tr className="text-slate-800 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
                             <th className="p-4 align-middle whitespace-nowrap text-center">अ.क्र</th><th className="p-4 align-middle whitespace-nowrap text-center">शेल्फ क्र.</th><th className="p-4 align-middle whitespace-nowrap text-center">गट्टा क्र.</th><th className="p-4 align-middle whitespace-nowrap text-center">नस्ती क्रमांक</th><th className="p-4 align-middle whitespace-nowrap text-center">संदर्भ क्र.</th><th className="p-4 align-middle min-w-[280px] text-left">विषय</th>
                             <th colSpan={2} className="p-4 align-middle text-center border-x border-indigo-100/50 dark:border-slate-700 bg-indigo-100/30 dark:bg-slate-700/50">नस्ती बंद करताना त्यामागील पृष्ठ</th>
                             <th className="p-4 align-middle whitespace-nowrap text-center">माहितीचे वर्गीकरण</th><th className="p-4 align-middle whitespace-nowrap text-center">नस्ती नष्ट करण्याचा दिनांक</th>
                             <th colSpan={2} className="p-4 align-middle text-center border-x border-indigo-100/50 dark:border-slate-700 bg-indigo-100/30 dark:bg-slate-700/50">व्यक्तीची सही</th>
                             <th className="p-4 align-middle min-w-[200px] text-left">शेरा</th><th className="p-4 align-middle whitespace-nowrap text-center">पृष्ठ क्र.</th><th className="p-4 align-middle whitespace-nowrap text-center">View</th>
                           </tr>
-                          <tr className="text-indigo-800 dark:text-indigo-300 text-[11px] uppercase tracking-wider bg-indigo-100/20 dark:bg-slate-700/30 border-t border-indigo-100/60 dark:border-slate-700">
+                          <tr className="text-slate-700 dark:text-slate-400 text-[11px] uppercase tracking-wider bg-indigo-100/20 dark:bg-slate-700/30 border-t border-indigo-100/60 dark:border-slate-700">
                             <th className="p-2"></th><th className="p-2"></th><th className="p-2"></th><th className="p-2"></th><th className="p-2"></th><th className="p-2"></th>
                             <th className="p-2 text-center border-l bg-indigo-100/30 dark:bg-slate-700/50 border-indigo-100/50 dark:border-slate-700">टिपणी भाग</th>
                             <th className="p-2 text-center border-r bg-indigo-100/30 dark:bg-slate-700/50 border-indigo-100/50 dark:border-slate-700">पत्रव्यवहार भाग</th><th className="p-2"></th><th className="p-2"></th>
@@ -878,37 +951,37 @@ export default function Home() {
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                           {paginatedData.map((record) => (
-                            <tr key={record.id} className="group bg-white dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/50 transition-colors duration-200">
+                            <tr key={record.id} className="group bg-[#FAFAFA] dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/50 transition-colors duration-200">
                               <td className="p-4 text-center font-medium text-slate-700 dark:text-slate-300">{record.serialNo}</td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.shelfNo || '-'}</td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.bundleNo || '-'}</td>
-                              <td className="p-4 text-center"><span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200 dark:border-slate-600">{record.fileNo || '-'}</span></td>
+                              <td className="p-4 text-center"><span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#F0F0F0] dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200 dark:border-slate-600">{record.fileNo || '-'}</span></td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.refNo || '-'}</td>
                               <td className="p-4"><div className="whitespace-pre-line break-words max-w-[300px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">{record.subject}</div></td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-l border-slate-50 dark:border-slate-700">{record.notePages}</td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-r border-slate-50 dark:border-slate-700">{record.correspondencePages}</td>
-                              <td className="p-4 text-center"><span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${record.classification === 'अ' ? 'bg-amber-100 text-amber-700 border border-amber-200' : record.classification === 'ब' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>{record.classification}</span></td>
+                              <td className="p-4 text-center"><span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${record.classification === 'अ' ? 'bg-amber-100 text-amber-700 border border-amber-200' : record.classification === 'ब' ? 'bg-blue-100 text-slate-600 border border-blue-200' : 'bg-[#F0F0F0] text-slate-700 border border-slate-200'}`}>{record.classification}</span></td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400">{record.destructionDate === 'कायम' ? <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">{record.destructionDate}</span> : record.destructionDate}</td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-l border-slate-50 dark:border-slate-700">{record.senderSignature || '-'}</td>
                               <td className="p-4 text-center text-slate-600 dark:text-slate-400 border-r border-slate-50 dark:border-slate-700">{record.receiverSignature || '-'}</td>
                               <td className="p-4"><div className="whitespace-pre-line break-words max-w-[250px] text-slate-500 dark:text-slate-400 text-xs leading-relaxed">{record.remarks}</div></td>
                               <td className="p-4 text-center font-medium text-slate-700 dark:text-slate-300">{record.pageRange}</td>
-                              <td className="p-4 text-center"><button onClick={() => setSelectedFile(record)} className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm hover:bg-indigo-50 dark:hover:bg-slate-600 hover:border-indigo-200 hover:text-indigo-700 transition-all font-medium text-sm"><Eye className="w-4 h-4 mr-1.5 text-slate-400" />View</button></td>
+                              <td className="p-4 text-center"><button onClick={() => setSelectedFile(record)} className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#FAFAFA] dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 shadow-sm hover:bg-indigo-50 dark:hover:bg-slate-600 hover:border-indigo-200 hover:text-slate-600 transition-all font-medium text-sm"><Eye className="w-4 h-4 mr-1.5 text-slate-400" />View</button></td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] dark:from-slate-800 dark:to-slate-800 border-t border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-4">
                       <p className="text-sm text-slate-600 dark:text-slate-400">Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span> of <span className="font-medium">{filteredData.length}</span></p>
-                      <div className="flex items-center gap-2"><span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span><select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="w-20 px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-sm">{ [5, 10, 20, 50].map((value) => (<option key={value} value={value}>{value}</option>)) }</select></div>
+                      <div className="flex items-center gap-2"><span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span><select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="w-20 px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm">{ [5, 10, 20, 50].map((value) => (<option key={value} value={value}>{value}</option>)) }</select></div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-sm disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"><ChevronLeft className="h-4 w-4 inline" /> Prev</button>
-                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => { let pageNum; if (totalPages <= 5) pageNum = i + 1; else if (currentPage <= 3) pageNum = i + 1; else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i; else pageNum = currentPage - 2 + i; return (<button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`px-3 py-1.5 rounded-md text-sm transition-all ${currentPage === pageNum ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md" : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"}`}>{pageNum}</button>); })}
-                      <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-sm disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">Next <ChevronRight className="h-4 w-4 inline" /></button>
+                      <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm disabled:opacity-50 hover:bg-[#F7F7F7] dark:hover:bg-slate-600 transition-colors"><ChevronLeft className="h-4 w-4 inline" /> Prev</button>
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => { let pageNum; if (totalPages <= 5) pageNum = i + 1; else if (currentPage <= 3) pageNum = i + 1; else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i; else pageNum = currentPage - 2 + i; return (<button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`px-3 py-1.5 rounded-md text-sm transition-all ${currentPage === pageNum ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md" : "border border-slate-300 dark:border-slate-600 bg-[#FAFAFA] dark:bg-slate-700 hover:bg-[#F7F7F7] dark:hover:bg-slate-600"}`}>{pageNum}</button>); })}
+                      <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm disabled:opacity-50 hover:bg-[#F7F7F7] dark:hover:bg-slate-600 transition-colors">Next <ChevronRight className="h-4 w-4 inline" /></button>
                     </div>
                   </div>
                 </div>
@@ -930,7 +1003,7 @@ export default function Home() {
                 </div>
               </>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-12 text-center">
+              <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-12 text-center">
                 <div className="text-6xl mb-4">📋</div>
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">No Records Found</h3>
                 <p className="text-gray-500 dark:text-gray-400">Please upload and process an Excel file first to see records here.</p>
@@ -941,22 +1014,23 @@ export default function Home() {
 
         {/* Stage 2: PDF Mapping Tab */}
         {activeTab === 'mapping' && (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6">
+          <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-6">
             <div className="mb-6 border-b border-indigo-200 dark:border-indigo-800 pb-4">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Stage 2: PDF Document Mapping</h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Link scanned PDF files to their corresponding extracted records. Auto-matching uses filename patterns against record metadata.</p>
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-black to-gray-500 bg-clip-text text-transparent">
+                    Stage 2: PDF Document Mapping
+                  </h2>                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Link scanned PDF files to their corresponding extracted records. Auto-matching uses filename patterns against record metadata.</p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-full">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">{allRecords.length} Records Available for Mapping</span>
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{allRecords.length} Records Available for Mapping</span>
                 </div>
               </div>
             </div>
 
             <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-5 border border-indigo-200 dark:border-indigo-800">
-              <h3 className="text-md font-semibold text-indigo-700 dark:text-indigo-300 mb-4">Stage 2 Instructions – {selectedProject}</h3>
+              <h3 className="text-md font-semibold text-slate-600 dark:text-slate-400 mb-4">Stage 2 Instructions – {selectedProject}</h3>
               <div className="space-y-4 text-sm text-slate-700 dark:text-slate-300">
                 <label className="flex items-start gap-3 cursor-pointer"><input type="checkbox" checked={checks[0]} onChange={() => { const updated = [...checks]; updated[0] = !updated[0]; setChecks(updated); }} className="mt-0.5" /><div><p>Have you created "{selectedProject}" in your SFTP Location?</p><p className="text-xs text-slate-500">तुम्ही SFTP लोकेशनमध्ये "{selectedProject}" तयार केला आहे का?</p></div></label>
                 <label className="flex items-start gap-3 cursor-pointer"><input type="checkbox" checked={checks[1]} onChange={() => { const updated = [...checks]; updated[1] = !updated[1]; setChecks(updated); }} className="mt-0.5" /><div><p>Have you kept all Nasti Files in your "{selectedProject}" folder under "{selectedProject} Raw Files"?</p><p className="text-xs text-slate-500">तुम्ही सर्व नस्ती फाईल्स "{selectedProject} Raw Files" या फोल्डरमध्ये ठेवल्या आहेत का?</p></div></label>
@@ -971,7 +1045,7 @@ export default function Home() {
 
             {stage2Completed && (
               <div className="space-y-2 mt-4">
-                <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📝 Mapping Logger</h3>
+                {/* <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>📝 Mapping Logger</h3> */}
                 <MappingLogger logs={mappingLogs} darkMode={darkMode} />
               </div>
             )}
@@ -1001,7 +1075,7 @@ export default function Home() {
       {/* View Record Dialog */}
       {selectedFile && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]" onClick={() => setSelectedFile(null)}>
-          <div className="bg-white dark:bg-slate-800 rounded-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Record Details</h3>

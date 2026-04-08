@@ -1,77 +1,73 @@
-// components/FileUpload.tsx
 'use client';
 
-import { useCallback, useState } from 'react';
+import React from 'react';
+import { UploadCloud } from 'lucide-react';
 
 interface FileUploadProps {
-  onFilesSelected: (files: File[]) => void;
-  isProcessing: boolean;
-  darkMode: boolean;
+  files: File[];
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
-export default function FileUpload({ onFilesSelected, isProcessing, darkMode }: FileUploadProps) {
-  const [isDragOver, setIsDragOver] = useState(false);
+const FileUpload: React.FC<FileUploadProps> = ({ files, setFiles }) => {
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    setFiles((prev) => [...prev, ...droppedFiles]);
+  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && !isProcessing) {
-      onFilesSelected(Array.from(e.target.files));
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setFiles((prev) => [...prev, ...selectedFiles]);
     }
   };
 
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isProcessing) {
-      setIsDragOver(true);
-    }
-  }, [isProcessing]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-    if (!isProcessing && e.dataTransfer.files) {
-      onFilesSelected(Array.from(e.dataTransfer.files));
-    }
-  }, [isProcessing, onFilesSelected]);
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${
-        isDragOver
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : darkMode
-          ? 'border-gray-600 hover:border-gray-500 bg-gray-800'
-          : 'border-gray-300 hover:border-gray-400 bg-gray-50'
-      } ${isProcessing ? 'opacity-50 pointer-events-none' : ''}`}
-    >
-      <input
-        type="file"
-        multiple
-        accept=".xlsx,.xls,.csv"
-        onChange={handleFileChange}
-        disabled={isProcessing}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        aria-label="File upload"
-      />
-      <div className="text-center">
-        <div className="text-5xl mb-3">📊</div>
-        <p className={`text-base font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-          Drop Excel files here or click to upload
-        </p>
-        <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Supports .xlsx, .xls, .csv files • Multiple files allowed
-        </p>
+    <div className="space-y-2">
+      <label className="block font-semibold text-[#121212] text-[16px]">Attachments</label>
+      <div className="relative group">
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleFileDrop}
+          onClick={() => document.getElementById('file-upload')?.click()}
+          className="w-full rounded-xl border-2 border-dashed border-[#e4e4e4] bg-[#fafafa]/50 transition-all p-8 flex flex-col items-center justify-center gap-3 cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-[#09b556] group-hover:scale-110 transition-transform">
+            <UploadCloud size={32} strokeWidth={1.5} />
+          </div>
+          <div className="text-center space-y-0.5">
+            <p className="text-[12px] font-semibold text-[#121212]">Drag and drop files here,</p>
+            <p className="text-[12px] font-semibold text-[#121212]">
+              or <span className="text-[#121212] font-semibold">click to browse</span>
+            </p>
+            <p className="text-[10px] text-[#636363] pt-1">PDF, DOCX, JPG, PNG, up to 500kb each</p>
+          </div>
+        </div>
+        <input
+          id="file-upload"
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
       </div>
+
+      {files.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-2">
+          {files.map((file, index) => (
+            <div key={index} className="flex items-center gap-2 bg-[#f0f9ff] border border-[#bae6fd] px-3 py-1 rounded-full text-[12px] text-[#0369a1]">
+              <span className="truncate max-w-[150px]">{file.name}</span>
+              <button onClick={() => removeFile(index)} className="hover:text-red-500 font-bold">×</button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default FileUpload;

@@ -191,17 +191,17 @@ export default function Home() {
               Upload Excel files to extract and view sheet data
             </p>
           </div>
-          <button
+          {/* <button
             onClick={toggleDarkMode}
             className="p-2 rounded-full transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-yellow-300 hover:bg-gray-300 dark:hover:bg-gray-600"
             aria-label="Toggle dark mode"
           >
             {darkMode ? '☀️' : '🌙'}
-          </button>
+          </button> */}
         </div>
 
         {/* Main Card */}
-        <div className="rounded-2xl shadow-xl overflow-hidden transition-colors duration-300 bg-white dark:bg-gray-800">
+        <div className="rounded-2xl shadow-xl overflow-hidden transition-colors duration-300 bg-[#FAFAFA] dark:bg-gray-800">
           <div className="p-6">
             {/* File Upload Section */}
             {currentStep === 'attach' && (
@@ -323,7 +323,7 @@ export default function Home() {
                               )}
                             </tr>
                           </thead>
-                          <tbody className={`divide-y ${darkMode ? 'divide-gray-700 bg-gray-800' : 'divide-gray-200 bg-white'}`}>
+                          <tbody className={`divide-y ${darkMode ? 'divide-gray-700 bg-gray-800' : 'divide-gray-200 bg-[#FAFAFA]'}`}>
                             {sheet.data.slice(0, 10).map((row, rowIdx) => (
                               <tr key={rowIdx} className={`hover:${darkMode ? 'bg-gray-700' : 'bg-gray-50'} transition-colors`}>
                                 {sheet.headers.slice(0, 8).map((_, colIdx) => (

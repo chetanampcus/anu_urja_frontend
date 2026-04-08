@@ -121,7 +121,7 @@ export default function RecordsViewer({
             className={`w-full px-3 py-2 rounded-lg border transition-colors ${
               darkMode
                 ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400 focus:border-blue-500'
-                : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500'
+                : 'bg-[#FAFAFA] border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-500'
             } focus:outline-none`}
           />
         </div>
@@ -134,7 +134,7 @@ export default function RecordsViewer({
           className={`px-3 py-2 rounded-lg border transition-colors ${
             darkMode
               ? 'bg-gray-700 border-gray-600 text-gray-200'
-              : 'bg-white border-gray-300 text-gray-700'
+              : 'bg-[#FAFAFA] border-gray-300 text-gray-700'
           } focus:outline-none focus:border-blue-500`}
         >
           {sheetNames.map(sheet => (
@@ -182,7 +182,7 @@ export default function RecordsViewer({
                   )}
                 </tr>
               </thead>
-              <tbody className={`divide-y ${darkMode ? 'divide-gray-700 bg-gray-800' : 'divide-gray-200 bg-white'}`}>
+              <tbody className={`divide-y ${darkMode ? 'divide-gray-700 bg-gray-800' : 'divide-gray-200 bg-[#FAFAFA]'}`}>
                 {paginatedRecords.map((record, idx) => (
                   <tr key={record.id} className={`hover:${darkMode ? 'bg-gray-700' : 'bg-gray-50'} transition-colors`}>
                     <td className={`px-4 py-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>

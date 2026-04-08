@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Search, Filter, ChevronDown, Eye, FileText, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { Button } from "../component/button"
 import {
@@ -23,27 +24,35 @@ import {
   CommandItem,
   CommandList,
 } from "../component/command"
+import CustomDropdown from "../component/CustomDropdown"
 
-function SearchableFilter({ placeholder, options, className }: { placeholder: string; options: string[], className?: string }) {
+function SearchableFilter({ placeholder, options, className, value: propValue, onChange }: { placeholder: string; options: string[], className?: string, value?: string, onChange?: (val: string) => void }) {
   const [open, setOpen] = useState(false)
-  const [value, setValue] = useState("")
+  const [internalValue, setInternalValue] = useState("")
+  
+  const value = propValue !== undefined ? propValue : internalValue;
+  
+  const handleSetValue = (val: string) => {
+    setInternalValue(val);
+    if (onChange) onChange(val);
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={`flex h-10 min-w-0 rounded-md bg-slate-50 border border-slate-200 hover:bg-white transition-colors cursor-pointer items-center justify-between px-3 text-slate-600 outline-none focus:bg-white focus:ring-2 focus:ring-slate-300 data-[state=open]:bg-white data-[state=open]:ring-2 data-[state=open]:ring-slate-300 data-[state=open]:border-slate-300 ${className || "flex-1"}`}>
+        <button className={`flex h-10 min-w-0 rounded-md bg-[#F7F7F7] border border-slate-200 hover:bg-[#FAFAFA] transition-colors cursor-pointer items-center justify-between px-3 text-slate-600 outline-none focus:bg-[#FAFAFA] focus:ring-2 focus:ring-slate-300 data-[state=open]:bg-[#FAFAFA] data-[state=open]:ring-2 data-[state=open]:ring-slate-300 data-[state=open]:border-slate-300 ${className || "flex-1"}`}>
           <span className="flex-1 tracking-[0.01em] leading-5 truncate text-left">
             {value ? value : placeholder}
           </span>
           <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 ml-2" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0 z-[999] bg-white border-slate-200 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-xl overflow-hidden" align="start">
-        <Command className="bg-white">
+      <PopoverContent className="w-[200px] p-0 z-[999] bg-[#FAFAFA] border-slate-200 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] rounded-xl overflow-hidden" align="start">
+        <Command className="bg-[#FAFAFA]">
           <div className="border-b border-slate-100">
             <CommandInput placeholder="Search..." className="h-10 bg-transparent" />
           </div>
-          <CommandList className="bg-white p-1.5">
+          <CommandList className="bg-[#FAFAFA] p-1.5">
             <CommandEmpty className="py-4 text-center text-sm text-slate-500">No results found.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
@@ -51,10 +60,10 @@ function SearchableFilter({ placeholder, options, className }: { placeholder: st
                   key={option}
                   value={option}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === option.toLowerCase() ? "" : option)
+                    handleSetValue(currentValue === option.toLowerCase() ? "" : option)
                     setOpen(false)
                   }}
-                  className="rounded-lg py-2 cursor-pointer flex justify-center text-slate-700 aria-selected:bg-slate-100 data-[selected=true]:bg-slate-100 hover:bg-slate-100 transition-colors mb-0.5 last:mb-0"
+                  className="rounded-lg py-2 cursor-pointer flex justify-center text-slate-700 aria-selected:bg-[#F0F0F0] data-[selected=true]:bg-[#F0F0F0] hover:bg-[#F0F0F0] transition-colors mb-0.5 last:mb-0"
                 >
                   <span className="truncate font-medium">{option}</span>
                 </CommandItem>
@@ -283,6 +292,11 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const availableColumns = ["Subject", "File No", "Remarks", "Shelf No"]
   const [searchColumns, setSearchColumns] = useState<string[]>(availableColumns)
+  const [department, setDepartment] = useState("");
+  const options = ["1", "2", "3", "4"].map((item) => ({
+    label: item,
+    value: item,
+  }));
 
   const toggleColumn = (col: string) => {
     setSearchColumns(prev =>
@@ -293,11 +307,17 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
 
+  const availableProjects = [
+    "तारापूर अणुऊर्जा प्रकल्प ३ & ४",
+    "सुर्या प्रकल्प",
+  ];
+  const [selectedProject, setSelectedProject] = useState(availableProjects[0]);
+
   // Text constants for Marathi content
   const TEXT = {
     title: "अभिलेख कक्षात पाठवावयाची प्रकरणे",
     branch: "शाखा / विभागाचे नाव : पुनर्वसन शाखा, जिल्हाधिकारी कार्यालय पालघर",
-    projectName: "प्रकरणाचे नाव: तारापूर अणुऊर्जा प्रकल्प ३ & ४",
+    projectName: `प्रकरणाचे नाव: ${selectedProject}`,
   }
 
   const filteredData = sampleData.filter((record) => {
@@ -323,42 +343,69 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+      <header className="sticky top-0 z-50 bg-[#FAFAFA]/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-              <span className="text-white font-bold text-lg">N</span>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-gray-300">
+              <img
+                src="/gov.png" // place your PNG inside /public folder
+                alt="Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg font-semibold text-slate-800">{TEXT.title}</h1>
               <p className="text-xs text-slate-500">Document Management System</p>
             </div>
           </div>
+          <nav className="flex items-center gap-8 ml-auto mr-2">
+            <Link href="/" className="relative text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors tracking-wide">
+              Upload Records
+            </Link>
+            <Link href="/dashboard" className="relative text-sm font-semibold text-slate-800 tracking-wide after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-indigo-600 after:to-blue-600 after:rounded-full">
+              View Records
+            </Link>
+          </nav>
         </div>
       </header>
 
       <main className="max-w-[1600px] mx-auto px-4 py-6">
+        
+        {/* Project Dropdown */}
+        <div className="mb-6 relative" style={{ zIndex: 100 }}>
+          <label className="block text-sm font-medium mb-1 text-slate-700">
+            Select Project / प्रकल्प निवडा:
+          </label>
+          <SearchableFilter
+            placeholder="Select Project"
+            options={availableProjects}
+            value={selectedProject}
+            onChange={setSelectedProject}
+            className="w-[350px] bg-white"
+          />
+        </div>
+
         {/* Title Card */}
-        <Card className="mb-6 border border-indigo-200/50 bg-gradient-to-r from-blue-100 to-indigo-100 text-indigo-950 shadow-md shadow-indigo-100/40">
+        <Card className="mb-6 border border-slate-200/50 bg-gradient-to-r from-[#F0F0F0] to-slate-200 text-slate-800 shadow-md shadow-slate-100/40">
           <CardContent className="py-3">
             <div className="text-center">
               <h2 className="text-xl font-bold mb-1">{TEXT.title}</h2>
-              <p className="text-indigo-800/80 text-sm font-medium leading-tight mb-0.5">{TEXT.branch}</p>
-              <p className="text-indigo-800/80 text-sm font-medium leading-tight">{TEXT.projectName}</p>
+              <p className="text-slate-700/80 text-sm font-medium leading-tight mb-0.5">{TEXT.branch}</p>
+              <p className="text-slate-700/80 text-sm font-medium leading-tight">{TEXT.projectName}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="mb-6 border-0 shadow-xl bg-white">
+        <Card className="mb-6 border-0 shadow-xl bg-[#FAFAFA]">
           <CardContent className="p-0">
             {/* Search + Filter Wrapper */}
             <div className="flex items-center gap-4 flex-wrap md:flex-nowrap p-4 w-full">
 
               {/* Search */}
               <span className="text-sm font-medium text-slate-600 shrink-0">Search:</span>
-              <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-300 overflow-visible transition-colors relative">
+              <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 bg-[#F7F7F7] focus-within:bg-[#FAFAFA] focus-within:ring-2 focus-within:ring-slate-300 overflow-visible transition-colors relative">
                 <div className="relative flex-1 h-full min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
@@ -371,14 +418,14 @@ export default function DashboardPage() {
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center justify-between gap-1.5 px-3 h-full border-l border-slate-200 hover:bg-slate-100 transition-colors focus:outline-none shrink-0 bg-transparent cursor-pointer rounded-r-lg text-sm text-slate-600 min-w-[110px]">
+                    <button className="flex items-center justify-between gap-1.5 px-3 h-full border-l border-slate-200 hover:bg-[#F0F0F0] transition-colors focus:outline-none shrink-0 bg-transparent cursor-pointer rounded-r-lg text-sm text-slate-600 min-w-[110px]">
                       <span className="truncate max-w-[80px]">
                         {searchColumns.length === availableColumns.length ? "All" : `${searchColumns.length} Selected`}
                       </span>
                       <ChevronDown className="h-4 w-4 text-slate-400" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 z-[999] bg-white border border-slate-200 shadow-md rounded-md py-1">
+                  <DropdownMenuContent align="end" className="w-48 z-[999] bg-[#FAFAFA] border border-slate-200 shadow-md rounded-md py-1">
                     {availableColumns.map(col => (
                       <DropdownMenuItem
                         key={col}
@@ -388,7 +435,7 @@ export default function DashboardPage() {
                         }}
                         className="flex items-center gap-2 cursor-pointer"
                       >
-                        <Check className={`mr-2 h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-indigo-600" : "opacity-0"}`} />
+                        <Check className={`mr-2 h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-slate-600" : "opacity-0"}`} />
                         {col}
                       </DropdownMenuItem>
                     ))}
@@ -401,10 +448,23 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium text-slate-600">Filters:</span>
 
                 {/* Department */}
-                <SearchableFilter
+                {/* <SearchableFilter
                   placeholder="Select Shelf No"
                   options={["1", "2", "3", "4"]}
                   className="w-[180px]"
+                /> */}
+
+                <CustomDropdown
+                  placeholder="Select a Shelf No"
+                  options={[
+                    { label: "1", value: "1" },
+                    { label: "2", value: "2" },
+                    { label: "3", value: "3" },
+                    { label: "4", value: "4" },
+                  ]}
+                  value={department}
+                  onChange={(val) => setDepartment(val)}
+                  showSearch={true}
                 />
 
                 {/* Set Priority */}
@@ -427,11 +487,11 @@ export default function DashboardPage() {
         </Card>
 
         {/* Table Card */}
-        <Card className="border-0 shadow-xl bg-white">
+        <Card className="border-0 shadow-xl bg-[#FAFAFA]">
           <CardContent className="p-0">
 
             {/* Table Section */}
-            <div className="mt-4 border-t border-slate-100 bg-slate-50/30">
+            <div className="mt-4 border-t border-slate-100 bg-[#F7F7F7]/30">
 
               {/* SCROLL AREA */}
               <div className="max-h-[600px] overflow-auto relative custom-scrollbar rounded-b-xl">
@@ -440,7 +500,7 @@ export default function DashboardPage() {
                   {/* HEADER */}
                   <thead className="sticky top-0 z-[100] bg-gradient-to-r from-blue-50/95 to-indigo-50/95 backdrop-blur-md shadow-sm border-b border-indigo-100 will-change-transform translate-y-[-1px]">
                     {/* ROW 1 */}
-                    <tr className="text-indigo-950 font-bold text-xs uppercase tracking-wider">
+                    <tr className="text-slate-800 font-bold text-xs uppercase tracking-wider">
                       <th className="p-4 align-middle whitespace-nowrap text-center">अ.क्र</th>
                       <th className="p-4 align-middle whitespace-nowrap text-center">शेल्फ क्र.</th>
                       <th className="p-4 align-middle whitespace-nowrap text-center">गट्टा क्र.</th>
@@ -465,7 +525,7 @@ export default function DashboardPage() {
                     </tr>
 
                     {/* ROW 2 */}
-                    <tr className="text-indigo-800 text-[11px] uppercase tracking-wider bg-indigo-100/20 border-t border-indigo-100/60">
+                    <tr className="text-slate-700 text-[11px] uppercase tracking-wider bg-[#F0F0F0]/20 border-t border-slate-200/60">
                       {Array(6).fill(0).map((_, i) => (
                         <th key={i} className="p-2"></th>
                       ))}
@@ -490,13 +550,13 @@ export default function DashboardPage() {
                     {paginatedData.map((record) => (
                       <tr
                         key={record.id}
-                        className="group bg-white hover:bg-indigo-50/40 transition-colors duration-200"
+                        className="group bg-[#FAFAFA] hover:bg-indigo-50/40 transition-colors duration-200"
                       >
                         <td className="p-4 text-center font-medium text-slate-700">{record.serialNo}</td>
                         <td className="p-4 text-center text-slate-600">{record.shelfNo || '-'}</td>
                         <td className="p-4 text-center text-slate-600">{record.bundleNo || '-'}</td>
                         <td className="p-4 text-center">
-                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">
+                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#F0F0F0] text-slate-700 text-xs font-medium border border-slate-200">
                             {record.fileNo || '-'}
                           </span>
                         </td>
@@ -513,8 +573,8 @@ export default function DashboardPage() {
 
                         <td className="p-4 text-center">
                           <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${record.classification === 'अ' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                            record.classification === 'ब' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                              'bg-slate-100 text-slate-700 border border-slate-200'
+                            record.classification === 'ब' ? 'bg-blue-100 text-slate-600 border border-blue-200' :
+                              'bg-[#F0F0F0] text-slate-700 border border-slate-200'
                             }`}>
                             {record.classification}
                           </span>
@@ -541,8 +601,8 @@ export default function DashboardPage() {
                         <td className="p-4 text-center font-medium text-slate-700">{record.pageRange}</td>
 
                         <td className="p-4 text-center">
-                          <button className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-indigo-600 shadow-sm hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-all font-medium text-sm group/btn">
-                            <Eye className="w-4 h-4 mr-1.5 text-slate-400 group-hover/btn:text-indigo-600 transition-colors" />
+                          <button className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#FAFAFA] border border-slate-200 text-slate-600 shadow-sm hover:bg-[#F7F7F7] hover:border-slate-300 hover:text-slate-800 transition-all font-medium text-sm group/btn">
+                            <Eye className="w-4 h-4 mr-1.5 text-slate-400 group-hover/btn:text-slate-600 transition-colors" />
                             View
                           </button>
                         </td>
@@ -557,7 +617,7 @@ export default function DashboardPage() {
           </CardContent>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] border-t border-slate-200">
             <div className="flex items-center gap-4">
               <p className="text-sm text-slate-600">
                 Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
@@ -571,18 +631,18 @@ export default function DashboardPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-20 justify-between border-slate-300 bg-white"
+                      className="w-20 justify-between border-slate-300 bg-[#FAFAFA]"
                     >
                       {itemsPerPage}
                       <ChevronDown className="h-4 w-4 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-20 z-[999] bg-white border border-slate-200 shadow-md rounded-md">
+                  <DropdownMenuContent align="start" className="w-20 z-[999] bg-[#FAFAFA] border border-slate-200 shadow-md rounded-md">
                     {[5, 10, 20, 50].map((value) => (
                       <DropdownMenuItem
                         key={value}
                         onClick={() => handleItemsPerPageChange(value)}
-                        className={itemsPerPage === value ? "bg-indigo-50 text-indigo-700" : ""}
+                        className={itemsPerPage === value ? "bg-indigo-50 text-slate-600" : ""}
                       >
                         {value}
                       </DropdownMenuItem>

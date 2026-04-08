@@ -25,17 +25,17 @@ const LandingPage = () => {
 
       {/* Left side image */}
       <div className="hidden lg:flex lg:w-[55%] h-screen relative">
-        <Image src="/bg2.png" alt="Team Working" fill className="object-cover" priority />
+        <Image src="/vish (1).png" alt="Team Working" fill className="object-cover" priority />
       </div>
 
       {/* Right side */}
       <div className="w-full lg:w-[55%] h-screen flex items-center justify-center px-6">
-        <div className="w-full max-w-95 bg-white rounded-2xl shadow-[0px_4px_32px_rgba(0,0,0,0.12)] px-7 py-5 flex flex-col items-center gap-3">
+        <div className="w-full max-w-95 bg-[#FAFAFA] rounded-2xl shadow-[0px_4px_32px_rgba(0,0,0,0.12)] px-7 py-5 flex flex-col items-center gap-3">
 
           {/* Logo */}
           <div className="w-25">
             <Image
-              src="/Energy Department Logo.jpg"
+              src="/gov.png"
               alt="Energy Department Logo"
               width={80}
               height={30}
@@ -112,7 +112,7 @@ const LandingPage = () => {
             </div>
 
             {/* Captcha */}
-            <div className="w-full border border-[#d1d5dc] rounded-lg p-2.5 flex flex-col gap-1.5 bg-white shadow-sm">
+            <div className="w-full border border-[#d1d5dc] rounded-lg p-2.5 flex flex-col gap-1.5 bg-[#FAFAFA] shadow-sm">
               <div className="h-8 border-[1.5px] border-dashed border-[#d1d5dc] rounded-md flex items-center px-3 w-fit">
                 <b className="text-[12px] text-[#3b3b3b]">W8uvs</b>
               </div>
