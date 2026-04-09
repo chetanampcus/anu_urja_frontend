@@ -7,6 +7,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { Search, ChevronDown, ChevronLeft, ChevronRight, Check, Upload, FileText, Link as LinkIcon, CheckCircle, AlertCircle, Loader2, UploadCloud, X, Table2, FileStack } from "lucide-react";
 import CustomDropdown from "./component/CustomDropdown";
+import ProgressBar from "./component/ProgressBar";
 import { MdOutlineFileUpload } from "react-icons/md";
 // ==================== Types & Interfaces ====================
 interface FileRecord {
@@ -67,29 +68,57 @@ function LogsPanel({ logs, darkMode }: { logs: LogEntry[]; darkMode: boolean }) 
   };
 
   return (
-    <div className={`rounded-lg overflow-hidden border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-      <div className={`px-4 py-3 border-b font-medium ${darkMode ? 'border-gray-700 bg-gray-800/50 text-gray-200' : 'border-gray-200 bg-gray-50 text-gray-700'}`}>
-        📋 Progress Log
+    <div
+      className={`rounded-xl overflow-hidden border shadow-sm ${darkMode ? "border-slate-600 bg-slate-800/40" : "border-slate-200 bg-white/90"}`}
+    >
+      <div
+        className={`px-4 py-2.5 border-b text-sm font-semibold tracking-tight ${darkMode ? "border-slate-600 bg-slate-800/80 text-slate-100" : "border-slate-200 bg-slate-50 text-slate-800"}`}
+      >
+        Progress log
       </div>
-      <div className="h-64 overflow-y-auto p-3 space-y-2">
+      <div className="max-h-72 overflow-y-auto p-3 space-y-2 [scrollbar-width:thin]">
         {logs.length === 0 ? (
-          <p className={`text-sm text-center py-8 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-            No logs yet. Upload and process files to see activity.
+          <p className={`text-sm text-center py-10 ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
+            Logs appear here after you click Extract again.
           </p>
         ) : (
-          logs.map((log: LogEntry) => (
-            <div
-              key={log.id}
-              className={`text-sm py-1.5 px-2 rounded transition-all duration-200 ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
-                }`}
-            >
-              <span className="mr-2">{getLogIcon(log.type)}</span>
-              <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{log.message}</span>
-              <span className={`text-xs ml-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {new Date(log.timestamp).toLocaleTimeString()}
-              </span>
-            </div>
-          ))
+          logs.map((log: LogEntry) => {
+            const accent =
+              log.type === "success"
+                ? darkMode
+                  ? "border-l-emerald-500 bg-emerald-950/25"
+                  : "border-l-emerald-500 bg-emerald-50/80"
+                : log.type === "error"
+                  ? darkMode
+                    ? "border-l-red-500 bg-red-950/20"
+                    : "border-l-red-500 bg-red-50/80"
+                  : log.type === "processing"
+                    ? darkMode
+                      ? "border-l-amber-400 bg-amber-950/20"
+                      : "border-l-amber-500 bg-amber-50/70"
+                    : darkMode
+                      ? "border-l-sky-500 bg-sky-950/20"
+                      : "border-l-sky-500 bg-sky-50/70";
+            return (
+              <div
+                key={log.id}
+                className={`animate-log-line-in flex items-start gap-2 text-sm py-2.5 pl-3 pr-2 rounded-lg border-l-[3px] shadow-sm transition-colors duration-200 ${accent} ${darkMode ? "hover:bg-white/5" : "hover:bg-white"}`}
+              >
+                <span
+                  className={`mt-0.5 shrink-0 text-base leading-none ${log.type === "processing" ? "animate-pulse" : "animate-log-icon-pop"}`}
+                  aria-hidden
+                >
+                  {getLogIcon(log.type)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <span className={`block leading-snug ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{log.message}</span>
+                  <span className={`mt-0.5 block text-[11px] tabular-nums ${darkMode ? "text-slate-500" : "text-slate-500"}`}>
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+            );
+          })
         )}
         <div ref={logsEndRef} />
       </div>
@@ -128,37 +157,6 @@ function MappingLogger({ logs, darkMode }: { logs: string[]; darkMode: boolean }
           ))
         )}
         <div ref={logsEndRef} />
-      </div>
-    </div>
-  );
-}
-
-// Progress Bar Component
-function ProgressBar({ progress, darkMode }: { progress: number; darkMode: boolean }) {
-  const [animatedProgress, setAnimatedProgress] = useState(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimatedProgress(progress);
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [progress]);
-
-  return (
-    <div className="w-full">
-      <div className="flex justify-between items-center mb-2">
-        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-          Overall Progress
-        </span>
-        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-          {Math.round(animatedProgress)}%
-        </span>
-      </div>
-      <div className={`w-full rounded-full h-3 overflow-hidden ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-        <div
-          className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${animatedProgress}%` }}
-        />
       </div>
     </div>
   );
@@ -261,6 +259,187 @@ function firstExcelFile(files: FileList | File[]): File | null {
   return null;
 }
 
+/** Row like [1,2,3,...,12] marking column numbers below two-line headers (तारापूर / गट्ठा sheets). */
+function isSequentialColumnMarkerRow(row: unknown[]): boolean {
+  if (!row?.length) return false;
+  const nums: number[] = [];
+  for (const c of row) {
+    if (c === "" || c === undefined || c === null) continue;
+    const s = String(c).trim();
+    if (s === "") continue;
+    const n = Number(s);
+    if (!Number.isFinite(n) || Math.floor(n) !== n) return false;
+    nums.push(n);
+  }
+  if (nums.length < 5) return false;
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] !== i + 1) return false;
+  }
+  return true;
+}
+
+function cellStr(row: unknown[], col: number): string {
+  const v = row[col];
+  if (v === undefined || v === null || v === "") return "-";
+  const t = String(v).replace(/\r\n/g, "\n").trim();
+  return t === "" ? "-" : t;
+}
+
+/** Strip non-digits from a cell (e.g. "गट्ठा नं. 1" → "1"). */
+function digitsOnlyFromCell(value: unknown): string {
+  if (value === undefined || value === null || value === "") return "-";
+  const digits = String(value).replace(/\D/g, "");
+  return digits === "" ? "-" : digits;
+}
+
+/** Map rows after a 1..N column marker (अ ब क ड वर्गीय यादी–style sheets). */
+const TARAPUR_STYLE_COL = {
+  serialOnSheet: 0,
+  refOrBundle: 1,
+  fileNo: 2,
+  subject: 3,
+  notePages: 4,
+  correspondencePages: 5,
+  classification: 6,
+  destructionDate: 7,
+  senderSignature: 8,
+  receiverSignature: 9,
+  remarks: 10,
+  pageRange: 11,
+} as const;
+
+function rowLooksLikeDataRow(row: unknown[]): boolean {
+  const fileNo = cellStr(row, TARAPUR_STYLE_COL.fileNo);
+  const subject = cellStr(row, TARAPUR_STYLE_COL.subject);
+  if (fileNo !== "-" || subject !== "-") return true;
+  const serial = cellStr(row, TARAPUR_STYLE_COL.serialOnSheet);
+  return serial !== "-" && /^\d+$/.test(serial);
+}
+
+async function extractAllRecordsFromExcel(
+  file: File
+): Promise<{ records: FileRecord[]; sheets: { name: string; rowCount: number }[] }> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        const allRecords: FileRecord[] = [];
+        const sheets: { name: string; rowCount: number }[] = [];
+        let globalSerialNo = 1;
+
+        for (const sheetName of workbook.SheetNames) {
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }) as unknown[][];
+
+          const nonEmptyRows = jsonData.filter(
+            (row) => row && row.length > 0 && row.some((cell) => cell && cell.toString().trim() !== "")
+          );
+
+          let markerIdx = -1;
+          for (let idx = 0; idx < Math.min(nonEmptyRows.length, 45); idx++) {
+            if (isSequentialColumnMarkerRow(nonEmptyRows[idx])) {
+              markerIdx = idx;
+              break;
+            }
+          }
+
+          let dataRows: unknown[][] = [];
+          let headers: string[] = [];
+
+          if (markerIdx !== -1) {
+            dataRows = nonEmptyRows.slice(markerIdx + 1).filter(rowLooksLikeDataRow);
+          } else {
+            let dataStartIndex = 0;
+            for (let idx = 0; idx < Math.min(nonEmptyRows.length, 20); idx++) {
+              const row = nonEmptyRows[idx];
+              if (isSequentialColumnMarkerRow(row)) {
+                dataStartIndex = idx + 1;
+                break;
+              }
+              const nonEmptyCount = row.filter((cell) => cell && cell.toString().trim() !== "").length;
+              if (nonEmptyCount > 3 && !isSequentialColumnMarkerRow(row)) {
+                headers = row.map((cell, colIdx) => cell?.toString().trim() || `Column_${colIdx + 1}`);
+                dataStartIndex = idx + 1;
+                break;
+              }
+            }
+            if (headers.length === 0 && nonEmptyRows.length > 0) {
+              const maxCols = Math.max(...nonEmptyRows.map((row) => row.length));
+              headers = Array.from({ length: maxCols }, (_, i) => `Column_${i + 1}`);
+              dataStartIndex = 0;
+            }
+            dataRows = nonEmptyRows.slice(dataStartIndex).filter((row) => !isSequentialColumnMarkerRow(row));
+          }
+
+          sheets.push({
+            name: sheetName,
+            rowCount: dataRows.length,
+          });
+
+          dataRows.forEach((row, idx) => {
+            if (markerIdx !== -1) {
+              allRecords.push({
+                id: `${sheetName}_row_${idx}`,
+                serialNo: globalSerialNo++,
+                shelfNo: digitsOnlyFromCell(jsonData?.[2]?.[0]),
+                bundleNo: digitsOnlyFromCell(sheetName),
+                fileNo: cellStr(row, TARAPUR_STYLE_COL.fileNo),
+                refNo: cellStr(row, TARAPUR_STYLE_COL.refOrBundle),
+                subject: cellStr(row, TARAPUR_STYLE_COL.subject),
+                notePages: cellStr(row, TARAPUR_STYLE_COL.notePages),
+                correspondencePages: cellStr(row, TARAPUR_STYLE_COL.correspondencePages),
+                classification: cellStr(row, TARAPUR_STYLE_COL.classification),
+                destructionDate: cellStr(row, TARAPUR_STYLE_COL.destructionDate),
+                senderSignature: cellStr(row, TARAPUR_STYLE_COL.senderSignature),
+                receiverSignature: cellStr(row, TARAPUR_STYLE_COL.receiverSignature),
+                remarks: cellStr(row, TARAPUR_STYLE_COL.remarks),
+                pageRange: cellStr(row, TARAPUR_STYLE_COL.pageRange),
+              });
+              return;
+            }
+
+            const getValue = (key: string) => {
+              const colIndex = headers.findIndex((h) => h.toLowerCase().includes(key.toLowerCase()));
+              if (colIndex !== -1 && row[colIndex]) return row[colIndex].toString();
+              return "-";
+            };
+
+            allRecords.push({
+              id: `${sheetName}_row_${idx}`,
+              serialNo: globalSerialNo++,
+              shelfNo: getValue("शेल्फ") || "-",
+              bundleNo: sheetName,
+              fileNo: getValue("नस्ती") || getValue("क्रमांक") || "-",
+              refNo: getValue("संदर्भ") || "-",
+              subject: getValue("विषय") || "-",
+              notePages: getValue("टिपणी") || "-",
+              correspondencePages: getValue("पत्रव्यवहार") || "-",
+              classification: getValue("वर्गीकरण") || "अ",
+              destructionDate: getValue("दिनांक") || "कायम",
+              senderSignature: getValue("पाठविणारा") || "-",
+              receiverSignature: getValue("स्वीकारणारा") || "-",
+              remarks: getValue("शेरा") || "-",
+              pageRange: getValue("पृष्ठ") || "-",
+            });
+          });
+        }
+
+        resolve({ records: allRecords, sheets });
+      } catch (error) {
+        console.error("Error extracting records:", error);
+        resolve({ records: [], sheets: [] });
+      }
+    };
+    reader.onerror = () => {
+      resolve({ records: [], sheets: [] });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 type StepKey = 'upload' | 'records' | 'mapping';
 
 const steps: { key: StepKey; label: string; icon: LucideIcon }[] = [
@@ -294,23 +473,27 @@ export default function Home() {
 
   const allChecked = checks.every(Boolean);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    if (!input.files?.length) return;
-    const excel = firstExcelFile(input.files);
-    input.value = "";
-    if (excel) setFiles([excel]);
-  };
-
-  // Clears all selected files
   const handleCancelFiles = () => {
-    setFiles([]); // assuming you have a `files` state
-    setLogs([]); // optional: clear logs too
-    setProgress(0); // reset progress if needed
+    abortControllerRef.current?.abort();
+    setFiles([]);
+    setLogs([]);
+    setProgress(0);
+    setAllRecords([]);
+    setSheetsList([]);
+    setIsProcessing(false);
   };
 
   const removeFileAt = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      if (next.length === 0) {
+        setAllRecords([]);
+        setSheetsList([]);
+        setLogs([]);
+        setProgress(0);
+      }
+      return next;
+    });
   };
 
   // Exports selected files
@@ -323,13 +506,6 @@ export default function Home() {
 
     // If you want, you can implement actual download logic:
     // files.forEach(file => { ... })
-  };
-
-  const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!e.dataTransfer.files?.length) return;
-    const excel = firstExcelFile(e.dataTransfer.files);
-    if (excel) setFiles([excel]);
   };
 
   // Check if project dropdown should be disabled (after records are extracted)
@@ -449,148 +625,138 @@ export default function Home() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const extractAllRecordsFromExcel = async (file: File): Promise<{ records: FileRecord[]; sheets: { name: string; rowCount: number }[] }> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
+  const runExtractionForFiles = useCallback(
+    async (fileList: File[]) => {
+      if (fileList.length === 0) return;
+
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+      const ac = abortControllerRef.current;
+
+      setIsProcessing(true);
+      setProgress(0);
+      setLogs([]);
+      setAllRecords([]);
+      setSheetsList([]);
+      setCurrentPage(1);
+
+      addLog(`🚀 Starting processing of ${fileList.length} file(s)...`, 'info');
+      addLog(`📁 Selected Project: ${selectedProject}`, 'info');
+
+      let totalRecords = 0;
+
+      try {
         try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-
-          const allRecords: FileRecord[] = [];
-          const sheets: { name: string; rowCount: number }[] = [];
-          let globalSerialNo = 1;
-
-          for (const sheetName of workbook.SheetNames) {
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }) as any[][];
-
-            const nonEmptyRows = jsonData.filter(row =>
-              row && row.length > 0 && row.some(cell => cell && cell.toString().trim() !== '')
-            );
-
-            let headers: string[] = [];
-            let dataStartIndex = 0;
-
-            for (let idx = 0; idx < Math.min(nonEmptyRows.length, 10); idx++) {
-              const row = nonEmptyRows[idx];
-              const nonEmptyCount = row.filter(cell => cell && cell.toString().trim() !== '').length;
-              if (nonEmptyCount > 3) {
-                headers = row.map((cell, colIdx) => cell?.toString().trim() || `Column_${colIdx + 1}`);
-                dataStartIndex = idx + 1;
-                break;
-              }
+          for (let i = 0; i < fileList.length; i++) {
+            if (ac.signal.aborted) {
+              addLog("⏹️ Processing cancelled by user.", "error");
+              break;
             }
 
-            if (headers.length === 0 && nonEmptyRows.length > 0) {
-              const maxCols = Math.max(...nonEmptyRows.map(row => row.length));
-              headers = Array.from({ length: maxCols }, (_, i) => `Column_${i + 1}`);
-              dataStartIndex = 0;
-            }
+            const file = fileList[i];
+            addLog(`⏳ Processing: ${file.name} (${formatFileSize(file.size)})`, "processing");
 
-            const dataRows = nonEmptyRows.slice(dataStartIndex);
+            const result = await extractAllRecordsFromExcel(file);
 
-            sheets.push({
-              name: sheetName,
-              rowCount: dataRows.length
-            });
+            if (ac.signal.aborted) break;
 
-            dataRows.forEach((row, idx) => {
-              const getValue = (key: string) => {
-                const colIndex = headers.findIndex(h => h.toLowerCase().includes(key.toLowerCase()));
-                if (colIndex !== -1 && row[colIndex]) return row[colIndex].toString();
-                return '-';
-              };
+            if (result.records.length > 0) {
+              totalRecords += result.records.length;
+              setAllRecords((prev) => [...prev, ...result.records]);
+              setSheetsList((prev) => [...prev, ...result.sheets]);
 
-              allRecords.push({
-                id: `${sheetName}_row_${idx}`,
-                serialNo: globalSerialNo++,
-                shelfNo: getValue('शेल्फ') || '-',
-                bundleNo: sheetName,
-                fileNo: getValue('नस्ती') || getValue('क्रमांक') || '-',
-                refNo: getValue('संदर्भ') || '-',
-                subject: getValue('विषय') || '-',
-                notePages: getValue('टिपणी') || '-',
-                correspondencePages: getValue('पत्रव्यवहार') || '-',
-                classification: getValue('वर्गीकरण') || 'अ',
-                destructionDate: getValue('दिनांक') || 'कायम',
-                senderSignature: getValue('पाठविणारा') || '-',
-                receiverSignature: getValue('स्वीकारणारा') || '-',
-                remarks: getValue('शेरा') || '-',
-                pageRange: getValue('पृष्ठ') || '-',
+              addLog(
+                `✅ Completed: ${file.name} - Found ${result.sheets.length} sheets with ${result.records.length} records`,
+                "success"
+              );
+
+              result.sheets.forEach((sheet, idx) => {
+                addLog(
+                  `   ${idx + 1}. ${sheet.name} - ${sheet.rowCount.toLocaleString()} records imported successfully`,
+                  "info"
+                );
               });
-            });
+            } else {
+              addLog(`❌ Error: ${file.name} - Failed to extract records`, "error");
+            }
+
+            setProgress(((i + 1) / fileList.length) * 100);
           }
 
-          resolve({ records: allRecords, sheets });
-        } catch (error) {
-          console.error('Error extracting records:', error);
-          resolve({ records: [], sheets: [] });
+          if (!ac.signal.aborted) {
+            addLog(`🏁 Processing finished. Total records: ${totalRecords}`, "info");
+          }
+        } finally {
+          setIsProcessing(false);
         }
-      };
-      reader.onerror = () => {
-        resolve({ records: [], sheets: [] });
-      };
-      reader.readAsArrayBuffer(file);
-    });
+
+        if (!ac.signal.aborted && totalRecords > 0) {
+          setProgress(100);
+          await new Promise<void>((resolve) => {
+            const id = window.setTimeout(resolve, 5000);
+            ac.signal.addEventListener(
+              "abort",
+              () => {
+                window.clearTimeout(id);
+                resolve();
+              },
+              { once: true }
+            );
+          });
+          if (!ac.signal.aborted) {
+            setActiveTab("records");
+          }
+        }
+      } finally {
+        abortControllerRef.current = null;
+      }
+    },
+    [addLog, formatFileSize, selectedProject, setActiveTab]
+  );
+
+  const processFiles = useCallback(() => {
+    void runExtractionForFiles(files);
+  }, [files, runExtractionForFiles]);
+
+  const handleFilesSelected = useCallback(
+    (selectedFiles: File[]) => {
+      const excel = firstExcelFile(selectedFiles);
+      if (!excel) return;
+      setFiles([excel]);
+      setSheetsList([]);
+      setAllRecords([]);
+      setLogs([]);
+      setProgress(0);
+    },
+    []
+  );
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (!input.files?.length) return;
+    const excel = firstExcelFile(input.files);
+    input.value = "";
+    if (excel) {
+      setFiles([excel]);
+      setSheetsList([]);
+      setAllRecords([]);
+      setLogs([]);
+      setProgress(0);
+    }
   };
 
-  const processFiles = useCallback(async () => {
-    if (files.length === 0 || isProcessing) return;
-
-    setIsProcessing(true);
-    setProgress(0);
-    setLogs([]);
-    setAllRecords([]);
-    setSheetsList([]);
-
-    addLog(`🚀 Starting processing of ${files.length} file(s)...`, 'info');
-    addLog(`📁 Selected Project: ${selectedProject}`, 'info');
-
-    abortControllerRef.current = new AbortController();
-    let totalRecords = 0;
-
-    for (let i = 0; i < files.length; i++) {
-      if (abortControllerRef.current?.signal.aborted) {
-        addLog('⏹️ Processing cancelled by user.', 'error');
-        break;
-      }
-
-      const file = files[i];
-      addLog(`⏳ Processing: ${file.name} (${formatFileSize(file.size)})`, 'processing');
-
-      const result = await extractAllRecordsFromExcel(file);
-
-      if (result.records.length > 0) {
-        totalRecords += result.records.length;
-        setAllRecords(prev => [...prev, ...result.records]);
-        setSheetsList(prev => [...prev, ...result.sheets]);
-
-        addLog(`✅ Completed: ${file.name} - Found ${result.sheets.length} sheets with ${result.records.length} records`, 'success');
-
-        result.sheets.forEach((sheet, idx) => {
-          addLog(`   ${idx + 1}. ${sheet.name} - ${sheet.rowCount.toLocaleString()} records imported successfully`, 'info');
-        });
-      } else {
-        addLog(`❌ Error: ${file.name} - Failed to extract records`, 'error');
-      }
-
-      setProgress(((i + 1) / files.length) * 100);
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!e.dataTransfer.files?.length) return;
+    const excel = firstExcelFile(e.dataTransfer.files);
+    if (excel) {
+      setFiles([excel]);
+      setSheetsList([]);
+      setAllRecords([]);
+      setLogs([]);
+      setProgress(0);
     }
-
-    addLog(`🏁 Processing finished. Total records: ${totalRecords}`, 'info');
-    setIsProcessing(false);
-    abortControllerRef.current = null;
-  }, [files, isProcessing, addLog, formatFileSize, selectedProject]);
-
-  const handleFilesSelected = useCallback((selectedFiles: File[]) => {
-    const excel = firstExcelFile(selectedFiles);
-    if (!excel) return;
-    setFiles([excel]);
-    setSheetsList([]);
-    setAllRecords([]);
-    addLog(`📎 ${excel.name} (${formatFileSize(excel.size)})`, 'info');
-  }, [addLog, formatFileSize]);
+  };
 
   const filteredData = allRecords.filter((record) => {
     if (!searchQuery) return true;
@@ -857,7 +1023,9 @@ export default function Home() {
                 <div className="text-center space-y-0.5">
                   <p className="text-[12px] font-semibold text-[#121212] dark:text-slate-100">Drag and drop files here,</p>
                   <p className="text-[12px] font-semibold text-[#121212] dark:text-slate-100">or <span className="font-semibold">click to browse</span></p>
-                  <p className="text-[10px] text-[#636363] dark:text-slate-400 pt-1">Excel only (.xlsx, .xls) — one file; choosing again replaces it</p>
+                  <p className="text-[10px] text-[#636363] dark:text-slate-400 pt-1">
+                    Excel only (.xlsx, .xls) — one file; choose Extract again to load rows into the Records table
+                  </p>
                 </div>
                 <input
                   id="file-upload"
@@ -894,19 +1062,34 @@ export default function Home() {
               {/* Buttons below drop area, aligned to the right */}
               <div className="flex justify-end gap-3 mt-4">
                 <button
+                  type="button"
                   onClick={handleCancelFiles}
                   className="px-4 py-2 rounded-lg bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={processFiles}
-                  className="px-4 py-2 rounded-lg bg-[#09B556] hover:bg-[#079c4a] text-white transition"
-                  disabled={files.length === 0}
+                  className="px-4 py-2 rounded-lg bg-[#09B556] hover:bg-[#079c4a] text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={files.length === 0 || isProcessing}
                 >
-                  Export
+                  {isProcessing ? "Extracting…" : "Extract again"}
                 </button>
               </div>
+
+              {files.length > 0 && (
+                <div className="mt-5 w-full min-w-0 space-y-5 rounded-2xl border border-slate-200/80 bg-white/60 p-4 shadow-lg shadow-indigo-500/5 backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/50 dark:shadow-indigo-500/10">
+                  <ProgressBar
+                    progress={progress}
+                    darkMode={darkMode}
+                    isActive={isProcessing}
+                    isComplete={!isProcessing && progress >= 100 && allRecords.length > 0}
+                    label="Spreadsheet import"
+                  />
+                  <LogsPanel logs={logs} darkMode={darkMode} />
+                </div>
+              )}
           </div>
         )}
 
@@ -922,117 +1105,117 @@ export default function Home() {
             )}
             {allRecords.length > 0 ? (
               <>
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-0 bg-[#FAFAFA] dark:bg-slate-800">
-                  <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-[#F7F7F7]/30 dark:border-slate-700 dark:bg-slate-800/50">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-0 bg-white dark:bg-slate-800">
+                  <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-800/50">
                     <div className="min-h-[21rem] flex-1 basis-0 overflow-x-auto overflow-y-auto rounded-b-xl [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[max(19rem,32dvh)]">
-                      <table className="w-max min-w-full border-separate border-spacing-0 text-sm [@media(min-width:1024px)_and_(max-height:760px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:760px)]:[&_tbody_td]:!p-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!px-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!py-1">
-                        <thead>
-                          <tr className="text-xs font-bold uppercase leading-none tracking-wider text-slate-800 dark:text-slate-300">
-                            <th className="sticky top-0 left-0 z-50 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-indigo-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98">
+                      <table className="records-table w-max min-w-full border-separate border-spacing-0 bg-slate-200 text-sm dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:760px)]:[&_tbody_td]:!p-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!px-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!py-2">
+                        <thead className="sticky top-0 z-[34] bg-slate-200 dark:bg-slate-700">
+                          <tr className="text-[0.8125rem] font-bold uppercase leading-none tracking-wide text-slate-900 sm:text-sm dark:text-slate-100">
+                            <th className="sticky left-0 top-auto z-50 box-border min-h-[3.5rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b-0 border-l border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
                               अ.क्र
                             </th>
-                            <th className="sticky top-0 left-[4.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98">
+                            <th className="sticky left-[4.5rem] top-auto z-50 box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
                               शेल्फ क्र.
                             </th>
-                            <th className="sticky top-0 left-[9.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98">
+                            <th className="sticky left-[9.5rem] top-auto z-50 box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
                               गट्टा क्र.
                             </th>
-                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                            <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
                               नस्ती क्रमांक
                             </th>
-                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
-                              संदर्भ क्र.
+                            <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                              संचिका क्र.
                             </th>
-                            <th className="sticky top-0 z-40 min-w-[280px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]">
+                            <th className="min-h-[3.5rem] min-w-[280px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]">
                               विषय
                             </th>
-                            <th colSpan={2} className="sticky top-0 z-40 border-b border-x border-indigo-100/50 bg-indigo-100/40 py-1.5 px-2 text-center align-middle whitespace-nowrap dark:border-slate-700 dark:bg-slate-700/60">
-                              नस्ती बंद करताना त्यामागील पृष्ठ
+                            <th colSpan={2} className="min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600">
+                              नस्ती बंद करताना त्यामधील पृष्ठ  
                             </th>
-                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                            <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
                               माहितीचे वर्गीकरण
                             </th>
-                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                            <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
                               नस्ती नष्ट करण्याचा दिनांक
                             </th>
-                            <th colSpan={2} className="sticky top-0 z-40 border-b border-x border-indigo-100/50 bg-indigo-100/40 py-1.5 px-2 text-center align-middle whitespace-nowrap dark:border-slate-700 dark:bg-slate-700/60">
+                            <th colSpan={2} className="min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600">
                               व्यक्तीची सही
                             </th>
-                            <th className="sticky top-0 z-40 min-w-[200px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]">
+                            <th className="min-h-[3.5rem] min-w-[200px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]">
                               शेरा
                             </th>
-                            <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                            <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
                               पृष्ठ क्र.
                             </th>
                           </tr>
-                          <tr className="bg-indigo-100/25 text-[11px] font-bold uppercase leading-snug tracking-wider text-slate-700 dark:bg-slate-700/35 dark:text-slate-400">
-                            <th className="sticky top-[calc(1.5rem+1px)] left-0 z-50 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-indigo-100/90 py-2 px-2 backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] left-[4.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-100/90 py-2 px-2 backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] left-[9.5rem] z-50 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-indigo-100/90 py-2 px-2 backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-l border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                          <tr className="text-xs font-bold uppercase leading-none tracking-wide text-slate-800 sm:text-[0.8125rem] dark:text-slate-200">
+                            <th className="sticky left-0 top-auto z-50 box-border min-h-[3rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-t border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="sticky left-[4.5rem] top-auto z-50 box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="sticky left-[9.5rem] top-auto z-50 box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
                               टिपणी भाग
                             </th>
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-r border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                            <th className="min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
                               पत्रव्यवहार भाग
                             </th>
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-l border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                            <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
                               पाठविणा-या
                             </th>
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-r border-indigo-100/50 bg-indigo-100/50 py-2 px-2 text-center dark:border-slate-700 dark:bg-slate-700/50">
+                            <th className="min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
                               स्वीकारणा-याची
                             </th>
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
-                            <th className="sticky top-[calc(1.5rem+1px)] z-40 border-b border-slate-200/80 bg-indigo-100/90 py-2 px-2 dark:border-slate-600 dark:bg-slate-800/98" />
+                            <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                            <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
                           </tr>
                         </thead>
                         <tbody>
                           {paginatedData.map((record) => (
-                            <tr key={record.id} className="group bg-[#FAFAFA] transition-colors duration-200 dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/50 [&_td]:align-top">
-                              <td className="sticky left-0 z-20 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-[#FAFAFA] p-4 text-center font-medium text-slate-700 group-hover:bg-indigo-50/60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700/80">
+                            <tr key={record.id} className="group bg-white transition-colors duration-200 dark:bg-slate-800 [&_td]:align-top">
+                              <td className="sticky left-0 z-20 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-slate-200 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                 {record.serialNo}
                               </td>
-                              <td className="sticky left-[4.5rem] z-20 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-[#FAFAFA] p-4 text-center text-slate-600 group-hover:bg-indigo-50/60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700/80">
+                              <td className="sticky left-[4.5rem] z-20 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
                                 {record.shelfNo || "-"}
                               </td>
-                              <td className="sticky left-[9.5rem] z-20 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-[#FAFAFA] p-4 text-center text-slate-600 group-hover:bg-indigo-50/60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700/80">
+                              <td className="sticky left-[9.5rem] z-20 box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
                                 {record.bundleNo || "-"}
                               </td>
-                              <td className="border-b border-slate-100 p-4 text-center dark:border-slate-700">
+                              <td className="border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800">
                                 <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-[#F0F0F0] px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                                  {record.fileNo || "-"}
+                                  {record.refNo || "-"}
                                 </span>
                               </td>
-                              <td className="border-b border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.refNo || "-"}</td>
-                              <td className="border-b border-slate-100 p-4 dark:border-slate-700">
+                              <td className="border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.fileNo || "-"}</td>
+                              <td className="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                                 <div className="max-h-24 max-w-[300px] overflow-y-auto whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[200px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[220px]">
                                   {record.subject}
                                 </div>
                               </td>
-                              <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.notePages}</td>
-                              <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.correspondencePages}</td>
-                              <td className="border-b border-slate-100 p-4 text-center dark:border-slate-700">
+                              <td className="border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.notePages}</td>
+                              <td className="border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.correspondencePages}</td>
+                              <td className="border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800">
                                 <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${record.classification === "अ" ? "border border-amber-200 bg-amber-100 text-amber-700" : record.classification === "ब" ? "border border-blue-200 bg-blue-100 text-slate-600" : "border border-slate-200 bg-[#F0F0F0] text-slate-700"}`}>{record.classification}</span>
                               </td>
-                              <td className="border-b border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">
+                              <td className="border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                                 {record.destructionDate === "कायम" ? (
                                   <span className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">{record.destructionDate}</span>
                                 ) : (
                                   record.destructionDate
                                 )}
                               </td>
-                              <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.senderSignature || "-"}</td>
-                              <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.receiverSignature || "-"}</td>
-                              <td className="border-b border-slate-100 p-4 dark:border-slate-700">
+                              <td className="border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.senderSignature || "-"}</td>
+                              <td className="border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.receiverSignature || "-"}</td>
+                              <td className="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                                 <div className="max-h-20 max-w-[250px] overflow-y-auto whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[180px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[200px]">
                                   {record.remarks}
                                 </div>
                               </td>
-                              <td className="border-b border-slate-100 p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">{record.pageRange}</td>
+                              <td className="border-b border-slate-100 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">{record.pageRange}</td>
                             </tr>
                           ))}
                         </tbody>
