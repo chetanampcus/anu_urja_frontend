@@ -629,15 +629,15 @@ export default function Home() {
     <div
       className={`flex min-h-0 flex-col overflow-hidden transition-colors duration-300 h-[calc(100dvh-6.5rem)] max-h-[calc(100dvh-6.5rem)] ${darkMode ? "dark bg-slate-900" : "bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50"}`}
     >
-      <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-3 py-2 sm:px-4 sm:py-3 lg:py-4 [@media(min-width:1024px)_and_(max-height:760px)]:px-3 [@media(min-width:1024px)_and_(max-height:760px)]:py-1.5">
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:items-stretch lg:gap-6 [@media(min-width:1024px)_and_(max-height:760px)]:lg:gap-4">
-          {/* Left: stepper — ~30% shorter than full column (max 70% height); whole column scrolls on lg if needed */}
-          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink overflow-hidden self-stretch [scrollbar-width:thin] lg:max-h-[70%] lg:min-h-0 lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-[16%] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-w-[8.5rem] [@media(min-width:1024px)_and_(max-height:760px)]:lg:max-w-[11rem]">
-            <div className="flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-5 lg:h-auto lg:max-h-none lg:min-h-0 [@media(min-width:1024px)_and_(max-height:760px)]:p-2.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2.5">
-              <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-4 [@media(min-width:1024px)_and_(max-height:760px)]:mb-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:mb-1.5">
+      <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-3 py-3 sm:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:px-3 [@media(min-width:1024px)_and_(max-height:760px)]:py-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:items-stretch lg:gap-3">
+          {/* Left: stepper — max height cap on lg; must use overflow-y-auto (never overflow-hidden) so all steps scroll into view */}
+          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink self-stretch overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:thin] [-ms-overflow-style:auto] [scrollbar-gutter:stable] lg:max-h-[70%] lg:min-h-0 lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 lg:self-start [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-[16%] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-w-[8.5rem] [@media(min-width:1024px)_and_(max-height:760px)]:lg:max-w-[11rem]">
+            <div className="flex w-full min-w-0 flex-col overflow-visible rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-4 lg:min-h-0 [@media(min-width:1024px)_and_(max-height:760px)]:p-2.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2.5">
+              <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-3 [@media(min-width:1024px)_and_(max-height:760px)]:mb-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:mb-1.5">
                 Progress
               </p>
-              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-3 pr-0.5 [scrollbar-width:thin] lg:flex-none lg:overflow-visible">
+              <div className="flex min-h-0 w-full min-w-0 flex-col pb-2">
                 {steps.map((step, index) => {
                   const isActive = activeTab === step.key;
                   const isCompleted = isStepCompleted(step.key);
@@ -653,7 +653,7 @@ export default function Home() {
                         aria-current={isActive ? "step" : undefined}
                         disabled={disabled}
                         onClick={() => goToStep(step.key)}
-                        className={`group flex w-full items-center gap-2 rounded-xl p-2 text-left transition-all duration-200 sm:gap-3 sm:p-3 [@media(min-width:1024px)_and_(max-height:760px)]:gap-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:p-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2 ${
+                        className={`group flex w-full items-center gap-2 rounded-lg p-2 text-left transition-all duration-200 sm:gap-2.5 sm:p-2.5 lg:gap-2.5 lg:p-2.5 [@media(min-width:1024px)_and_(max-height:760px)]:gap-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:p-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2 ${
                           isActive
                             ? "border-2 border-[#09b556] bg-emerald-50/70 shadow-md shadow-emerald-900/5 ring-2 ring-[#09b556]/25 dark:border-emerald-500 dark:bg-emerald-950/35 dark:ring-emerald-500/30"
                             : "border-2 border-transparent bg-slate-50/50 dark:bg-slate-700/30"
@@ -664,7 +664,7 @@ export default function Home() {
                         } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                       >
                         <span
-                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors sm:h-12 sm:w-12 lg:h-14 lg:w-14 [@media(min-width:1024px)_and_(max-height:760px)]:h-9 [@media(min-width:1024px)_and_(max-height:760px)]:w-9 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-9 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-9 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-10 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-10 ${
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors sm:h-11 sm:w-11 lg:h-11 lg:w-11 [@media(min-width:1024px)_and_(max-height:760px)]:h-9 [@media(min-width:1024px)_and_(max-height:760px)]:w-9 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-9 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-9 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-10 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-10 ${
                             isActive
                               ? "border-emerald-200 bg-white text-[#09b556] shadow-sm dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-400"
                               : isCompleted
@@ -673,9 +673,9 @@ export default function Home() {
                           }`}
                         >
                           {isCompleted ? (
-                            <Check className="h-5 w-5 stroke-[2.5] sm:h-6 sm:w-6 lg:h-7 lg:w-7 [@media(min-width:1024px)_and_(max-height:760px)]:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-5" aria-hidden />
+                            <Check className="h-4 w-4 stroke-[2.5] sm:h-5 sm:w-5 lg:h-5 lg:w-5 [@media(min-width:1024px)_and_(max-height:760px)]:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-5" aria-hidden />
                           ) : (
-                            <StepIcon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 [@media(min-width:1024px)_and_(max-height:760px)]:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-5" strokeWidth={1.75} aria-hidden />
+                            <StepIcon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-5 lg:w-5 [@media(min-width:1024px)_and_(max-height:760px)]:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-5" strokeWidth={1.75} aria-hidden />
                           )}
                         </span>
                         <span className="min-w-0 flex-1">
@@ -699,11 +699,11 @@ export default function Home() {
                       </button>
                       {index < steps.length - 1 && (
                         <div
-                          className="flex justify-start py-2 pl-7 sm:py-3 sm:pl-9 lg:py-5 lg:pl-10 [@media(min-width:1024px)_and_(max-height:760px)]:py-1 [@media(min-width:1024px)_and_(max-height:760px)]:pl-5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:py-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:pl-6 [@media(min-width:1024px)_and_(max-height:760px)]:lg:py-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:pl-7"
+                          className="flex justify-start py-2 pl-6 sm:py-2.5 sm:pl-8 lg:py-3 lg:pl-8 [@media(min-width:1024px)_and_(max-height:760px)]:py-1 [@media(min-width:1024px)_and_(max-height:760px)]:pl-5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:py-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:pl-6 [@media(min-width:1024px)_and_(max-height:760px)]:lg:py-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:pl-7"
                           aria-hidden
                         >
                           <div
-                            className={`w-0.5 min-h-[28px] shrink-0 rounded-full sm:min-h-[40px] lg:min-h-[52px] [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[18px] [@media(min-width:1024px)_and_(max-height:760px)]:sm:min-h-[20px] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-h-[24px] ${
+                            className={`w-0.5 min-h-[24px] shrink-0 rounded-full sm:min-h-[32px] lg:min-h-[36px] [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[18px] [@media(min-width:1024px)_and_(max-height:760px)]:sm:min-h-[20px] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-h-[24px] ${
                               isCompleted
                                 ? "bg-gradient-to-b from-emerald-400 to-emerald-600"
                                 : "bg-slate-200 dark:bg-slate-600"
@@ -737,8 +737,8 @@ export default function Home() {
           <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:thin] lg:min-h-0">
             <div className="flex h-auto min-h-full w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
               {/* Shared horizontal inset: padding on wrapper */}
-              <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-6 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:pb-3 [@media(min-width:1024px)_and_(max-height:760px)]:pt-3">
-                <div className="relative mb-6 shrink-0 w-full [@media(min-width:1024px)_and_(max-height:760px)]:mb-3" style={{ zIndex: 100 }}>
+              <div className="flex min-h-0 flex-1 flex-col px-4 py-3 sm:px-6 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:py-3">
+                <div className="relative mb-3 shrink-0 w-full" style={{ zIndex: 100 }}>
                   <label className={`mb-1 block text-sm font-medium ${isProjectDisabled ? "text-gray-400 dark:text-gray-500" : "text-slate-700 dark:text-slate-300"}`}>
                     Select Project / प्रकल्प निवडा:
                     {isProjectDisabled && <span className="ml-2 text-xs text-gray-400">(Project locked after extraction)</span>}
@@ -1078,24 +1078,29 @@ export default function Home() {
           </div>
         )}
 
-        {/* Stage 2: PDF Mapping Tab */}
+        {/* Stage 2: PDF Mapping Tab — flat layout, aligned with Select Project (no extra card wrapper) */}
         {activeTab === 'mapping' && (
-          <div className="bg-[#FAFAFA] dark:bg-slate-800 rounded-2xl shadow-xl p-6">
-            <div className="mb-6 border-b border-indigo-200 dark:border-indigo-800 pb-4">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-black to-gray-500 bg-clip-text text-transparent">
+          <div className="w-full text-left">
+            <div className="mb-6">
+              <div className="flex flex-col items-start text-left">
+                <div className="flex w-full flex-wrap items-center justify-start gap-x-5 gap-y-2 text-left">
+                  <h2 className="min-w-0 text-left text-xl font-bold text-slate-900 dark:text-slate-100">
                     Stage 2: PDF Document Mapping
-                  </h2>                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Link scanned PDF files to their corresponding extracted records. Auto-matching uses filename patterns against record metadata.</p>
+                  </h2>
+                  <div className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200/80 bg-transparent px-3 py-1.5 dark:border-slate-600">
+                    <div className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-green-500" />
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      {allRecords.length} Records Available for Mapping
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 rounded-full">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{allRecords.length} Records Available for Mapping</span>
-                </div>
+                <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 sm:mt-4">
+                  Link scanned PDF files to their corresponding extracted records. Auto-matching uses filename patterns against record metadata.
+                </p>
               </div>
             </div>
 
-            <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-5 border border-indigo-200 dark:border-indigo-800">
+            <div className="mb-6 bg-indigo-50/40 dark:bg-indigo-950/15 rounded-xl p-5 border border-indigo-100/80 dark:border-indigo-900/35">
               <h3 className="text-md font-semibold text-slate-600 dark:text-slate-400 mb-4">Stage 2 Instructions – {selectedProject}</h3>
               <div className="space-y-4 text-sm text-slate-700 dark:text-slate-300">
                 <label className="flex items-start gap-3 cursor-pointer"><input type="checkbox" checked={checks[0]} onChange={() => { const updated = [...checks]; updated[0] = !updated[0]; setChecks(updated); }} className="mt-0.5" /><div><p>Have you created "{selectedProject}" in your SFTP Location?</p><p className="text-xs text-slate-500">तुम्ही SFTP लोकेशनमध्ये "{selectedProject}" तयार केला आहे का?</p></div></label>
@@ -1116,7 +1121,7 @@ export default function Home() {
               </div>
             )}
 
-            <div className="mt-8 flex justify-between border-t border-slate-200 dark:border-slate-700 pt-6">
+            <div className="mt-8 flex justify-between pt-6">
               <button
                 onClick={goToPreviousStep}
                 className="px-6 py-2.5 rounded-xl font-medium transition-all bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 shadow-sm flex items-center gap-2"
