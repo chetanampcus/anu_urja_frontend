@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Search, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react"
+import { Search, ChevronDown, ChevronLeft, ChevronRight, Check, Printer, Eye } from "lucide-react"
 import { Button } from "../component/button"
 import {
   DropdownMenu,
@@ -226,6 +226,234 @@ const sampleData: FileRecord[] = [
   }
 ];
 
+function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
+  const isP = variant === "print"
+  const thP = (align: "center" | "left" = "center", bg: "soft" | "mid" = "soft") => {
+    const bgc = bg === "mid" ? "bg-slate-300" : "bg-slate-200"
+    const al = align === "left" ? "text-left" : "text-center"
+    return `border border-slate-700 ${bgc} p-1.5 align-middle text-[8pt] font-bold leading-tight text-slate-900 ${al}`
+  }
+  const pick = (printCn: string, screenCn: string) => (isP ? printCn : screenCn)
+
+  return (
+    <>
+      <tr
+        className={pick(
+          "text-slate-900",
+          "text-[0.8125rem] font-bold uppercase leading-none tracking-wide text-slate-900 sm:text-sm dark:text-slate-100",
+        )}
+      >
+        <th className={pick(thP(), "sticky left-0 top-auto z-[18] box-border min-h-[3.5rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b-0 border-l border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          अ.क्र
+        </th>
+        <th className={pick(thP(), "sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          शेल्फ क्र.
+        </th>
+        <th className={pick(thP(), "sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          गट्टा क्र.
+        </th>
+        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          नस्ती क्रमांक
+        </th>
+        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          संचिका क्र.
+        </th>
+        <th className={pick(thP("left"), "min-h-[3.5rem] min-w-[280px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]")}>
+          विषय
+        </th>
+        <th colSpan={2} className={pick(thP("center", "mid"), "min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600")}>
+          नस्ती बंद करताना त्यामधील पृष्ठ
+        </th>
+        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          माहितीचे वर्गीकरण
+        </th>
+        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          नस्ती नष्ट करण्याचा दिनांक
+        </th>
+        <th colSpan={2} className={pick(thP("center", "mid"), "min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600")}>
+          व्यक्तीची सही
+        </th>
+        <th className={pick(thP("left"), "min-h-[3.5rem] min-w-[200px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]")}>
+          शेरा
+        </th>
+        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+          पृष्ठ क्र.
+        </th>
+        {!isP ? (
+          <th className="min-h-[3.5rem] min-w-[5.5rem] max-w-[6rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-2 text-center align-middle text-[0.6875rem] font-bold uppercase leading-tight tracking-wide text-slate-900 sm:text-[0.75rem] dark:border-slate-500 dark:bg-slate-700 dark:text-slate-100">
+            View Files
+          </th>
+        ) : null}
+      </tr>
+      <tr
+        className={pick(
+          "text-slate-900",
+          "text-xs font-bold uppercase leading-none tracking-wide text-slate-800 sm:text-[0.8125rem] dark:text-slate-200",
+        )}
+      >
+        <th className={pick(thP(), "sticky left-0 top-auto z-[18] box-border min-h-[3rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-t border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(thP(), "sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(thP(), "sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+          टिपणी भाग
+        </th>
+        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+          पत्रव्यवहार भाग
+        </th>
+        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+          पाठविणा-या
+        </th>
+        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+          स्वीकारणा-याची
+        </th>
+        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        {!isP ? (
+          <th
+            className="min-h-[3rem] min-w-[5.5rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-2 dark:border-slate-500 dark:bg-slate-600"
+            aria-hidden
+          />
+        ) : null}
+      </tr>
+    </>
+  )
+}
+
+function RecordsDataRow({ record, variant }: { record: FileRecord; variant: "screen" | "print" }) {
+  const isP = variant === "print"
+  const tdSticky = (left: string, c: string) =>
+    isP ? c : `${c} sticky ${left} z-[10] box-border bg-white dark:bg-slate-800`
+  const c1 = "border-b border-slate-200 p-4 text-center font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
+  const c2 = "border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
+  const pc = "p-1 text-[8pt] align-top"
+
+  return (
+    <tr className={isP ? "" : "group bg-white transition-colors duration-200 dark:bg-slate-800 [&_td]:align-top"}>
+      <td className={tdSticky("left-0", isP ? `${pc} text-center font-semibold` : `${c1} min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-l border-r`)}>
+        {record.serialNo}
+      </td>
+      <td className={tdSticky("left-[4.5rem]", isP ? `${pc} text-center` : `${c2} min-w-[5rem] w-[5rem] max-w-[5rem]`)}>
+        {record.shelfNo || "-"}
+      </td>
+      <td className={tdSticky("left-[9.5rem]", isP ? `${pc} text-center` : `${c2} min-w-[5rem] w-[5rem] max-w-[5rem]`)}>
+        {record.bundleNo || "-"}
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800"}>
+        {isP ? record.refNo || "-" : (
+          <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-[#F0F0F0] px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+            {record.refNo || "-"}
+          </span>
+        )}
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+        {record.fileNo || "-"}
+      </td>
+      <td className={isP ? `${pc} text-left` : "border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"}>
+        <div
+          className={
+            isP
+              ? "print-subject whitespace-pre-wrap break-words leading-snug"
+              : "max-h-24 max-w-[300px] overflow-y-auto whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[200px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[220px]"
+          }
+        >
+          {record.subject}
+        </div>
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+        {record.notePages}
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+        {record.correspondencePages}
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800"}>
+        {isP ? (
+          record.classification
+        ) : (
+          <span
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${record.classification === "अ" ? "border border-amber-200 bg-amber-100 text-amber-700" : record.classification === "ब" ? "border border-blue-200 bg-blue-100 text-slate-600" : "border border-slate-200 bg-[#F0F0F0] text-slate-700"}`}
+          >
+            {record.classification}
+          </span>
+        )}
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+        {isP ? (
+          record.destructionDate
+        ) : record.destructionDate === "कायम" ? (
+          <span className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">{record.destructionDate}</span>
+        ) : (
+          record.destructionDate
+        )}
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+        {record.senderSignature || "-"}
+      </td>
+      <td className={isP ? `${pc} text-center` : "border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+        {record.receiverSignature || "-"}
+      </td>
+      <td className={isP ? `${pc} text-left` : "border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"}>
+        <div
+          className={
+            isP
+              ? "print-remarks whitespace-pre-wrap break-words text-slate-800"
+              : "max-h-20 max-w-[250px] overflow-y-auto whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[180px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[200px]"
+          }
+        >
+          {record.remarks}
+        </div>
+      </td>
+      <td className={isP ? `${pc} text-center font-medium` : "border-b border-slate-100 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}>
+        {record.pageRange}
+      </td>
+      {!isP ? (
+        <td className="border-b border-slate-100 bg-white p-2 text-center align-middle print:hidden dark:border-slate-700 dark:bg-slate-800">
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-400 dark:hover:bg-slate-700 dark:hover:text-indigo-300"
+            aria-label={`View files for record ${record.serialNo}`}
+          >
+            <Eye className="h-4 w-4" aria-hidden />
+          </button>
+        </td>
+      ) : null}
+    </tr>
+  )
+}
+
+function RecordsPrintDocHeaderRow({
+  title,
+  branch,
+  projectName,
+  totalCount,
+  printedAt,
+}: {
+  title: string
+  branch: string
+  projectName: string
+  totalCount: number
+  printedAt: string
+}) {
+  return (
+    <tr className="records-print-doc-header-row">
+      <th colSpan={14} scope="colgroup" className="records-print-doc-header">
+        <div className="text-center leading-tight text-black">
+          <div className="text-[11pt] font-bold">{title}</div>
+          <div className="mt-1 text-[9pt] text-slate-800">{branch}</div>
+          <div className="mt-0.5 text-[9pt] font-semibold text-slate-900">{projectName}</div>
+          <div className="mt-2 text-[8pt] text-slate-600">
+            एकूण नोंदी: {totalCount} · मुद्रित: {printedAt}
+          </div>
+        </div>
+      </th>
+    </tr>
+  )
+}
+
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const availableColumns = ["Subject", "File No", "Remarks", "Shelf No"]
@@ -276,10 +504,17 @@ export default function DashboardPage() {
     setCurrentPage(1)
   }
 
+  const handlePrint = () => {
+    window.print()
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+    <div
+      data-print-root="dashboard"
+      className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50 print:min-h-0 print:bg-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
+    >
       <section
-        className="sticky top-24 z-[900] -mt-6 h-14 w-full shrink-0 overflow-hidden bg-slate-900 shadow-[0_6px_16px_-4px_rgba(30,58,138,0.22)] sm:h-16"
+        className="sticky top-24 z-[900] -mt-6 h-14 w-full shrink-0 overflow-hidden bg-slate-900 shadow-[0_6px_16px_-4px_rgba(30,58,138,0.22)] print:hidden sm:h-16"
         aria-label="Page title banner"
       >
         <Image
@@ -300,229 +535,163 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <main className="relative z-[16] mx-auto max-w-[1600px] px-3 py-12 sm:px-4">
-        <div className="mb-6" style={{ zIndex: 100 }}>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Select Project / प्रकल्प निवडा:
-          </label>
-          <CustomDropdown
-            placeholder="Select Project"
-            options={availableProjects.map((p) => ({ label: p, value: p }))}
-            value={selectedProject}
-            onChange={setSelectedProject}
-            className="w-full max-w-[350px]"
-          />
+      <main className="relative z-[16] mx-auto max-w-[1600px] px-3 py-12 print:py-4 print:px-4 sm:px-4">
+        <div
+          className="mb-6 flex flex-col gap-3 print:hidden sm:flex-row sm:items-end sm:justify-between sm:gap-4"
+          style={{ zIndex: 100 }}
+        >
+          <div className="min-w-0 flex-1">
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Select Project / प्रकल्प निवडा:
+            </label>
+            <CustomDropdown
+              placeholder="Select Project"
+              options={availableProjects.map((p) => ({ label: p, value: p }))}
+              value={selectedProject}
+              onChange={setSelectedProject}
+              className="w-full max-w-[350px]"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={handlePrint}
+            className="w-full shrink-0 border-slate-300 bg-white hover:bg-slate-50 sm:w-auto dark:border-slate-600 dark:bg-white dark:hover:bg-slate-100"
+          >
+            <Printer className="h-4 w-4 shrink-0" aria-hidden />
+            Print / Save as PDF
+          </Button>
         </div>
 
-        <div className="relative z-[60] mb-6 rounded-xl border border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/80">
-          <div className="flex w-full flex-wrap items-center gap-4 p-4 lg:flex-nowrap">
-              {/* Search ~20% narrower than an even split; filters use the rest */}
-              <div className="flex min-h-10 w-full min-w-0 items-center gap-2 sm:gap-3 lg:w-[40%] lg:max-w-[40%] lg:shrink-0">
-              <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Search:</span>
-              <div className="flex h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-[#F7F7F7] transition-colors focus-within:bg-[#FAFAFA] focus-within:ring-2 focus-within:ring-slate-300 dark:border-slate-600 dark:bg-slate-900/40 dark:focus-within:bg-slate-900/60 dark:focus-within:ring-slate-500 relative overflow-visible">
-                <div className="relative flex-1 h-full min-w-0">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Search documents..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-full pl-9 pr-3 text-sm bg-transparent border-0 focus:outline-none focus:ring-0 text-slate-900 placeholder:text-slate-500 rounded-l-lg"
+        <div className="relative z-0 flex min-h-0 flex-col overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.08),0_4px_16px_-4px_rgba(15,23,42,0.06)] print:rounded-none print:border-0 print:shadow-none dark:border-slate-700 dark:bg-slate-800 dark:shadow-[0_2px_12px_-2px_rgba(0,0,0,0.35),0_4px_24px_-6px_rgba(0,0,0,0.25)]">
+          <div className="flex min-h-0 flex-1 flex-col overflow-visible border-t border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-800/50">
+            <div
+              className="relative isolate z-[100] shrink-0 overflow-visible border-b border-slate-200 bg-white shadow-[inset_0_-1px_0_0_rgba(148,163,184,0.35)] print:hidden dark:border-slate-600 dark:bg-slate-800 dark:shadow-[inset_0_-1px_0_0_rgba(71,85,105,0.5)]"
+              role="search"
+            >
+              <div className="relative z-[110] flex w-full max-w-full flex-wrap items-center gap-4 p-4 lg:flex-nowrap">
+                <div className="flex min-h-10 w-full min-w-0 items-center gap-2 sm:gap-3 lg:w-[40%] lg:max-w-[40%] lg:shrink-0">
+                  <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Search:</span>
+                  <div className="relative flex h-10 min-w-0 flex-1 overflow-visible rounded-lg border border-slate-200 bg-[#F7F7F7] transition-colors focus-within:bg-[#FAFAFA] focus-within:ring-2 focus-within:ring-slate-300 dark:border-slate-600 dark:bg-slate-900/40 dark:focus-within:bg-slate-900/60 dark:focus-within:ring-slate-500">
+                    <div className="relative h-full min-w-0 flex-1">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search documents..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-full w-full rounded-l-lg border-0 bg-transparent pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
+                      />
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-full min-w-[110px] shrink-0 cursor-pointer items-center justify-between gap-1.5 rounded-r-lg border-l border-slate-200 bg-transparent px-3 text-sm text-slate-600 transition-colors hover:bg-[#F0F0F0] focus:outline-none dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                          <span className="max-w-[80px] truncate">
+                            {searchColumns.length === availableColumns.length ? "All" : `${searchColumns.length} Selected`}
+                          </span>
+                          <ChevronDown className="h-4 w-4 text-slate-400" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        sideOffset={10}
+                        className="z-[9999] w-48 rounded-md border border-slate-200 bg-[#FAFAFA] py-1 shadow-md dark:border-slate-600 dark:bg-slate-800"
+                      >
+                        {availableColumns.map((col) => (
+                          <DropdownMenuItem
+                            key={col}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleColumn(col);
+                            }}
+                            className="flex cursor-pointer items-center gap-2"
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "text-slate-600 opacity-100 dark:text-slate-300" : "opacity-0"}`}
+                            />
+                            {col}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                <div className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-3 text-left text-[14px] lg:w-0 lg:min-w-0">
+                  <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
+                  <CustomDropdown
+                    placeholder="Select a Shelf No"
+                    options={[
+                      { label: "1", value: "1" },
+                      { label: "2", value: "2" },
+                      { label: "3", value: "3" },
+                      { label: "4", value: "4" },
+                    ]}
+                    value={department}
+                    onChange={(val) => setDepartment(val)}
+                    showSearch={true}
+                    className="min-w-[140px] flex-1 sm:max-w-[220px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
+                  />
+                  <CustomDropdown
+                    placeholder="Select Gattha No"
+                    options={Array.from({ length: 4 }).map((_, i) => ({ label: `${i + 1}`, value: `${i + 1}` }))}
+                    value=""
+                    onChange={() => {}}
+                    className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
+                  />
+                  <CustomDropdown
+                    placeholder="Select Priority"
+                    options={[
+                      { label: "High", value: "High" },
+                      { label: "Medium", value: "Medium" },
+                      { label: "Low", value: "Low" },
+                    ]}
+                    value=""
+                    onChange={() => {}}
+                    className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                   />
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center justify-between gap-1.5 px-3 h-full border-l border-slate-200 hover:bg-[#F0F0F0] transition-colors focus:outline-none shrink-0 bg-transparent cursor-pointer rounded-r-lg text-sm text-slate-600 min-w-[110px]">
-                      <span className="truncate max-w-[80px]">
-                        {searchColumns.length === availableColumns.length ? "All" : `${searchColumns.length} Selected`}
-                      </span>
-                      <ChevronDown className="h-4 w-4 text-slate-400" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 z-[999] bg-[#FAFAFA] border border-slate-200 shadow-md rounded-md py-1">
-                    {availableColumns.map(col => (
-                      <DropdownMenuItem
-                        key={col}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          toggleColumn(col)
-                        }}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Check className={`mr-2 h-4 w-4 shrink-0 transition-opacity ${searchColumns.includes(col) ? "opacity-100 text-slate-600" : "opacity-0"}`} />
-                        {col}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              </div>
-
-              <div className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-3 text-left text-[14px] lg:w-0 lg:min-w-0">
-                <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
-
-                <CustomDropdown
-                  placeholder="Select a Shelf No"
-                  options={[
-                    { label: "1", value: "1" },
-                    { label: "2", value: "2" },
-                    { label: "3", value: "3" },
-                    { label: "4", value: "4" },
-                  ]}
-                  value={department}
-                  onChange={(val) => setDepartment(val)}
-                  showSearch={true}
-                  className="min-w-[140px] flex-1 sm:max-w-[220px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
-                />
-
-                {/* Set Priority */}
-                <CustomDropdown
-                  placeholder="Select Gattha No"
-                  options={Array.from({ length: 4 }).map((_, i) => ({ label: `${i + 1}`, value: `${i + 1}` }))}
-                  value=""
-                  onChange={() => {}}
-                  className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
-                />
-
-                <CustomDropdown
-                  placeholder="Select Priority"
-                  options={[
-                    { label: "High", value: "High" },
-                    { label: "Medium", value: "Medium" },
-                    { label: "Low", value: "Low" }
-                  ]}
-                  value=""
-                  onChange={() => {}}
-                  className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
-                />
-
               </div>
             </div>
-        </div>
 
-        <div className="relative z-0 flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-800/50">
-            <div className="max-h-[min(600px,70dvh)] flex-1 overflow-x-auto overflow-y-auto [scrollbar-width:thin]">
+            <div className="relative z-0 max-h-[min(600px,70dvh)] min-h-0 flex-1 overflow-x-auto overflow-y-auto [scrollbar-width:thin] print:hidden">
               <table className="records-table w-max min-w-full border-separate border-spacing-0 bg-slate-200 text-sm dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:760px)]:[&_tbody_td]:!p-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!px-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!py-2">
                 <thead className="sticky top-0 z-[12] bg-slate-200 dark:bg-slate-700">
-                  <tr className="text-[0.8125rem] font-bold uppercase leading-none tracking-wide text-slate-900 sm:text-sm dark:text-slate-100">
-                    <th className="sticky left-0 top-auto z-[18] box-border min-h-[3.5rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b-0 border-l border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      अ.क्र
-                    </th>
-                    <th className="sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      शेल्फ क्र.
-                    </th>
-                    <th className="sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      गट्टा क्र.
-                    </th>
-                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      नस्ती क्रमांक
-                    </th>
-                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      संचिका क्र.
-                    </th>
-                    <th className="min-h-[3.5rem] min-w-[280px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]">
-                      विषय
-                    </th>
-                    <th colSpan={2} className="min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600">
-                      नस्ती बंद करताना त्यामधील पृष्ठ
-                    </th>
-                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      माहितीचे वर्गीकरण
-                    </th>
-                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      नस्ती नष्ट करण्याचा दिनांक
-                    </th>
-                    <th colSpan={2} className="min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600">
-                      व्यक्तीची सही
-                    </th>
-                    <th className="min-h-[3.5rem] min-w-[200px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]">
-                      शेरा
-                    </th>
-                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
-                      पृष्ठ क्र.
-                    </th>
-                  </tr>
-                  <tr className="text-xs font-bold uppercase leading-none tracking-wide text-slate-800 sm:text-[0.8125rem] dark:text-slate-200">
-                    <th className="sticky left-0 top-auto z-[18] box-border min-h-[3rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-t border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
-                      टिपणी भाग
-                    </th>
-                    <th className="min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
-                      पत्रव्यवहार भाग
-                    </th>
-                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
-                      पाठविणा-या
-                    </th>
-                    <th className="min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
-                      स्वीकारणा-याची
-                    </th>
-                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
-                  </tr>
+                  <RecordsTableHeaderRows variant="screen" />
                 </thead>
                 <tbody>
                   {paginatedData.map((record) => (
-                    <tr key={record.id} className="group bg-white transition-colors duration-200 dark:bg-slate-800 [&_td]:align-top">
-                      <td className="sticky left-0 z-[10] box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-slate-200 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        {record.serialNo}
-                      </td>
-                      <td className="sticky left-[4.5rem] z-[10] box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {record.shelfNo || "-"}
-                      </td>
-                      <td className="sticky left-[9.5rem] z-[10] box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {record.bundleNo || "-"}
-                      </td>
-                      <td className="border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                        <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-[#F0F0F0] px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                          {record.refNo || "-"}
-                        </span>
-                      </td>
-                      <td className="border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                        {record.fileNo || "-"}
-                      </td>
-                      <td className="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-                        <div className="max-h-24 max-w-[300px] overflow-y-auto whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[200px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[220px]">
-                          {record.subject}
-                        </div>
-                      </td>
-                      <td className="border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.notePages}</td>
-                      <td className="border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.correspondencePages}</td>
-                      <td className="border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                        <span
-                          className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${record.classification === "अ" ? "border border-amber-200 bg-amber-100 text-amber-700" : record.classification === "ब" ? "border border-blue-200 bg-blue-100 text-slate-600" : "border border-slate-200 bg-[#F0F0F0] text-slate-700"}`}
-                        >
-                          {record.classification}
-                        </span>
-                      </td>
-                      <td className="border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                        {record.destructionDate === "कायम" ? (
-                          <span className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">{record.destructionDate}</span>
-                        ) : (
-                          record.destructionDate
-                        )}
-                      </td>
-                      <td className="border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.senderSignature || "-"}</td>
-                      <td className="border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.receiverSignature || "-"}</td>
-                      <td className="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-                        <div className="max-h-20 max-w-[250px] overflow-y-auto whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[180px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[200px]">
-                          {record.remarks}
-                        </div>
-                      </td>
-                      <td className="border-b border-slate-100 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">{record.pageRange}</td>
-                    </tr>
+                    <RecordsDataRow key={record.id} record={record} variant="screen" />
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] px-6 py-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-800 sm:flex-row [@media(min-width:1024px)_and_(max-height:760px)]:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:py-2.5">
+
+            <div className="hidden print:block">
+              <table className="records-print-table">
+                <thead>
+                  <RecordsPrintDocHeaderRow
+                    title={TEXT.title}
+                    branch={TEXT.branch}
+                    projectName={TEXT.projectName}
+                    totalCount={filteredData.length}
+                    printedAt={new Date().toLocaleString("mr-IN", { dateStyle: "medium", timeStyle: "short" })}
+                  />
+                  <RecordsTableHeaderRows variant="print" />
+                </thead>
+                <tbody>
+                  {filteredData.map((record) => (
+                    <RecordsDataRow key={`print-${record.id}`} record={record} variant="print" />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] px-6 py-4 print:hidden dark:border-slate-700 dark:from-slate-800 dark:to-slate-800 sm:flex-row [@media(min-width:1024px)_and_(max-height:760px)]:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:py-2.5">
               <div className="flex flex-wrap items-center gap-4">
                 <p className="text-sm text-slate-600 dark:text-slate-400">
                   Showing <span className="font-medium">{startIndex + 1}</span> to{" "}

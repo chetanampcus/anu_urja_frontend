@@ -19,6 +19,7 @@ interface CustomDropdownProps {
   showSearch?: boolean;
   className?: string;
   disabled?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -29,13 +30,35 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onChange,
   showSearch = false,
   className = '',
-  disabled = false
+  disabled = false,
+  onOpenChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const skipInitialOpenEvent = useRef(true);
+  const isOpenRef = useRef(isOpen);
+  const onOpenChangeRef = useRef(onOpenChange);
+  isOpenRef.current = isOpen;
+  onOpenChangeRef.current = onOpenChange;
 
   const selectedOption = options.find(opt => opt.value === value);
+
+  useEffect(() => {
+    if (skipInitialOpenEvent.current) {
+      skipInitialOpenEvent.current = false;
+      return;
+    }
+    onOpenChangeRef.current?.(isOpen);
+  }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (isOpenRef.current) {
+        onOpenChangeRef.current?.(false);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,7 +75,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   );
 
   return (
-    <div className={`flex flex-col gap-1.5 w-full ${className}`} ref={dropdownRef}>
+    <div
+      className={`relative flex w-full flex-col gap-1.5 ${className} ${isOpen ? "z-[1100]" : "z-auto"}`}
+      ref={dropdownRef}
+    >
       {label && <label className="block text-[#121212] text-[15px] font-normal">{label}</label>}
 
       <div className="relative">
@@ -85,7 +111,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         </button>
 
         {isOpen && (
-          <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white border border-[#e4e4e4] rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.08)] z-[200] overflow-hidden">
+          <div className="absolute top-[calc(100%+12px)] left-0 z-[1100] w-full overflow-hidden rounded-xl border border-[#e4e4e4] bg-white shadow-[0px_8px_24px_rgba(0,0,0,0.12)] dark:border-slate-600 dark:bg-slate-800">
             {showSearch && (
               <div className="p-2 border-b border-[#f0f0f0]">
                 <div className="relative">
