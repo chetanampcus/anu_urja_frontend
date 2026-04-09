@@ -1,35 +1,142 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import { Search, ChevronDown, ChevronLeft, ChevronRight, Check, Printer, Eye } from "lucide-react"
-import { Button } from "../component/button"
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import {
+  Search,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Printer,
+  Eye,
+  AlertTriangle,
+} from "lucide-react";
+import { Button } from "../component/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../component/dropdown-menu"
-import CustomDropdown from "../component/CustomDropdown"
+} from "../component/dropdown-menu";
+import CustomDropdown from "../component/CustomDropdown";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../component/dialog";
+import { useRouter } from "next/navigation";
 
 // Replaced SearchableFilter with CustomDropdown
 
 interface FileRecord {
-  id: number
-  serialNo: number
-  shelfNo: string
-  bundleNo: string
-  fileNo: string
-  refNo: string
-  subject: string
-  notePages: string
-  correspondencePages: string
-  classification: string
-  destructionDate: string
-  senderSignature: string
-  receiverSignature: string
-  remarks: string
-  pageRange: string
+  id: number | string;
+  serialNo: number;
+  shelfNo: string;
+  bundleNo: string;
+  fileNo: string;
+  refNo: string;
+  subject: string;
+  notePages: string;
+  correspondencePages: string;
+  classification: string;
+  destructionDate: string;
+  senderSignature: string;
+  receiverSignature: string;
+  remarks: string;
+  pageRange: string;
+}
+
+interface ProjectOption {
+  id: string;
+  name: string;
+}
+
+interface RecordApiItem {
+  id?: number | string;
+  legacyNo?: string | null;
+  fileNo?: string | null;
+  collectorFileNo?: string | null;
+  gatthaNo?: string | null;
+  shelfNo?: string | null;
+  subject?: string | null;
+  notePages?: string | null;
+  correspondencePages?: string | null;
+  classification?: string | null;
+  destructionDate?: string | null;
+  senderSignature?: string | null;
+  receiverSignature?: string | null;
+  remarks?: string | null;
+  totalPages?: string | number | null;
+}
+
+interface RecordsPageApiResponse {
+  content?: RecordApiItem[];
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+  first?: boolean;
+  last?: boolean;
+}
+
+const fallbackProjects = ["तारापूर अणुऊर्जा प्रकल्प ३ & ४", "सुर्या प्रकल्प"];
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function parseProjectsResponse(payload: unknown): ProjectOption[] {
+  const root = toRecord(payload);
+  const candidates =
+    (Array.isArray(payload) && payload) ||
+    (root && Array.isArray(root.projects) && root.projects) ||
+    (root && Array.isArray(root.data) && root.data) ||
+    [];
+
+  const seenIds = new Set<string>();
+  const parsed: ProjectOption[] = [];
+
+  for (const item of candidates) {
+    const row = toRecord(item);
+    if (!row) continue;
+    const idValue = row.id ?? row.projectId ?? row.uuid;
+    const nameValue = row.name ?? row.projectName ?? row.title ?? row.label;
+    const id = typeof idValue === "string" ? idValue.trim() : "";
+    const name = typeof nameValue === "string" ? nameValue.trim() : "";
+    if (!id || !name || seenIds.has(id)) continue;
+    seenIds.add(id);
+    parsed.push({ id, name });
+  }
+
+  return parsed;
+}
+
+function stringifyCell(value: unknown, fallback = "-"): string {
+  if (value === null || value === undefined) return fallback;
+  const text = String(value).trim();
+  return text.length > 0 ? text : fallback;
+}
+
+function parseRecordsResponse(payload: unknown): RecordsPageApiResponse {
+  const root = toRecord(payload);
+  if (!root) return {};
+  return {
+    content: Array.isArray(root.content)
+      ? (root.content as RecordApiItem[])
+      : [],
+    page: typeof root.page === "number" ? root.page : 0,
+    size: typeof root.size === "number" ? root.size : 20,
+    totalElements:
+      typeof root.totalElements === "number" ? root.totalElements : 0,
+    totalPages: typeof root.totalPages === "number" ? root.totalPages : 0,
+    first: Boolean(root.first),
+    last: Boolean(root.last),
+  };
 }
 
 const sampleData: FileRecord[] = [
@@ -40,14 +147,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (3) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
     pageRange: "1 ते 655",
   },
   {
@@ -57,14 +166,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (2) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
     pageRange: "1 ते 505",
   },
   {
@@ -74,14 +185,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "-",
     refNo: "-",
-    subject: "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत.",
+    subject:
+      "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत संचिका असल्याने कायमस्वरुपी ठेवण्यात येते.",
+    remarks:
+      "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत संचिका असल्याने कायमस्वरुपी ठेवण्यात येते.",
     pageRange: "1 ते 183",
   },
   {
@@ -91,14 +204,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (1) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
     pageRange: "1 ते 307",
   },
   {
@@ -136,7 +251,8 @@ const sampleData: FileRecord[] = [
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "मौजे अक्करपट्टी संयुक्त मोजणी पत्रक गावठाण घरांचे मो.र.नं. 91 असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
+    remarks:
+      "मौजे अक्करपट्टी संयुक्त मोजणी पत्रक गावठाण घरांचे मो.र.नं. 91 असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
     pageRange: "1 ते 505",
   },
   {
@@ -146,14 +262,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (7) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
     pageRange: "1 ते 713",
   },
   {
@@ -163,14 +281,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (4) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
     pageRange: "1 ते 433",
   },
   {
@@ -180,14 +300,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (5) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
     pageRange: "1 ते 501",
   },
   {
@@ -197,14 +319,16 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (8) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
     pageRange: "1 ते 775",
   },
   {
@@ -214,26 +338,32 @@ const sampleData: FileRecord[] = [
     bundleNo: "-",
     fileNo: "40 (6) अ",
     refNo: "-",
-    subject: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+    subject:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
     notePages: "-",
     correspondencePages: "-",
     classification: "अ",
     destructionDate: "कायम",
     senderSignature: "",
     receiverSignature: "",
-    remarks: "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+    remarks:
+      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
     pageRange: "1 ते 943",
-  }
+  },
 ];
 
 function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
-  const isP = variant === "print"
-  const thP = (align: "center" | "left" = "center", bg: "soft" | "mid" = "soft") => {
-    const bgc = bg === "mid" ? "bg-slate-300" : "bg-slate-200"
-    const al = align === "left" ? "text-left" : "text-center"
-    return `border border-slate-700 ${bgc} p-1.5 align-middle text-[8pt] font-bold leading-tight text-slate-900 ${al}`
-  }
-  const pick = (printCn: string, screenCn: string) => (isP ? printCn : screenCn)
+  const isP = variant === "print";
+  const thP = (
+    align: "center" | "left" = "center",
+    bg: "soft" | "mid" = "soft",
+  ) => {
+    const bgc = bg === "mid" ? "bg-slate-300" : "bg-slate-200";
+    const al = align === "left" ? "text-left" : "text-center";
+    return `border border-slate-700 ${bgc} p-1.5 align-middle text-[8pt] font-bold leading-tight text-slate-900 ${al}`;
+  };
+  const pick = (printCn: string, screenCn: string) =>
+    isP ? printCn : screenCn;
 
   return (
     <>
@@ -243,40 +373,102 @@ function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
           "text-[0.8125rem] font-bold uppercase leading-none tracking-wide text-slate-900 sm:text-sm dark:text-slate-100",
         )}
       >
-        <th className={pick(thP(), "sticky left-0 top-auto z-[18] box-border min-h-[3.5rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b-0 border-l border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "sticky left-0 top-auto z-[18] box-border min-h-[3.5rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b-0 border-l border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           अ.क्र
         </th>
-        <th className={pick(thP(), "sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           शेल्फ क्र.
         </th>
-        <th className={pick(thP(), "sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           गट्टा क्र.
         </th>
-        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           नस्ती क्रमांक
         </th>
-        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           संचिका क्र.
         </th>
-        <th className={pick(thP("left"), "min-h-[3.5rem] min-w-[280px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]")}>
+        <th
+          className={pick(
+            thP("left"),
+            "min-h-[3.5rem] min-w-[280px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]",
+          )}
+        >
           विषय
         </th>
-        <th colSpan={2} className={pick(thP("center", "mid"), "min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600")}>
+        <th
+          colSpan={2}
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600",
+          )}
+        >
           नस्ती बंद करताना त्यामधील पृष्ठ
         </th>
-        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           माहितीचे वर्गीकरण
         </th>
-        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           नस्ती नष्ट करण्याचा दिनांक
         </th>
-        <th colSpan={2} className={pick(thP("center", "mid"), "min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600")}>
+        <th
+          colSpan={2}
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600",
+          )}
+        >
           व्यक्तीची सही
         </th>
-        <th className={pick(thP("left"), "min-h-[3.5rem] min-w-[200px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]")}>
+        <th
+          className={pick(
+            thP("left"),
+            "min-h-[3.5rem] min-w-[200px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]",
+          )}
+        >
           शेरा
         </th>
-        <th className={pick(thP(), "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700")}>
+        <th
+          className={pick(
+            thP(),
+            "min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700",
+          )}
+        >
           पृष्ठ क्र.
         </th>
         {!isP ? (
@@ -291,28 +483,98 @@ function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
           "text-xs font-bold uppercase leading-none tracking-wide text-slate-800 sm:text-[0.8125rem] dark:text-slate-200",
         )}
       >
-        <th className={pick(thP(), "sticky left-0 top-auto z-[18] box-border min-h-[3rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-t border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(thP(), "sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(thP(), "sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+        <th
+          className={pick(
+            thP(),
+            "sticky left-0 top-auto z-[18] box-border min-h-[3rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-t border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            thP(),
+            "sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            thP(),
+            "sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            `${thP("center", "mid")} bg-slate-400`,
+            "min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500",
+          )}
+        >
           टिपणी भाग
         </th>
-        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+        <th
+          className={pick(
+            `${thP("center", "mid")} bg-slate-400`,
+            "min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500",
+          )}
+        >
           पत्रव्यवहार भाग
         </th>
-        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+        <th
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            `${thP("center", "mid")} bg-slate-400`,
+            "min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500",
+          )}
+        >
           पाठविणा-या
         </th>
-        <th className={pick(`${thP("center", "mid")} bg-slate-400`, "min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500")}>
+        <th
+          className={pick(
+            `${thP("center", "mid")} bg-slate-400`,
+            "min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500",
+          )}
+        >
           स्वीकारणा-याची
         </th>
-        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
-        <th className={pick(thP("center", "mid"), "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600")} />
+        <th
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
+        <th
+          className={pick(
+            thP("center", "mid"),
+            "min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600",
+          )}
+        />
         {!isP ? (
           <th
             className="min-h-[3rem] min-w-[5.5rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-2 dark:border-slate-500 dark:bg-slate-600"
@@ -321,39 +583,96 @@ function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
         ) : null}
       </tr>
     </>
-  )
+  );
 }
 
-function RecordsDataRow({ record, variant }: { record: FileRecord; variant: "screen" | "print" }) {
-  const isP = variant === "print"
+function RecordsDataRow({
+  record,
+  variant,
+}: {
+  record: FileRecord;
+  variant: "screen" | "print";
+}) {
+  const isP = variant === "print";
   const tdSticky = (left: string, c: string) =>
-    isP ? c : `${c} sticky ${left} z-[10] box-border bg-white dark:bg-slate-800`
-  const c1 = "border-b border-slate-200 p-4 text-center font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
-  const c2 = "border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
-  const pc = "p-1 text-[8pt] align-top"
+    isP
+      ? c
+      : `${c} sticky ${left} z-[10] box-border bg-white dark:bg-slate-800`;
+  const c1 =
+    "border-b border-slate-200 p-4 text-center font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300";
+  const c2 =
+    "border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400";
+  const pc = "p-1 text-[8pt] align-top";
 
   return (
-    <tr className={isP ? "" : "group bg-white transition-colors duration-200 dark:bg-slate-800 [&_td]:align-top"}>
-      <td className={tdSticky("left-0", isP ? `${pc} text-center font-semibold` : `${c1} min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-l border-r`)}>
+    <tr
+      className={
+        isP
+          ? ""
+          : "group bg-white transition-colors duration-200 dark:bg-slate-800 [&_td]:align-top"
+      }
+    >
+      <td
+        className={tdSticky(
+          "left-0",
+          isP
+            ? `${pc} text-center font-semibold`
+            : `${c1} min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-l border-r`,
+        )}
+      >
         {record.serialNo}
       </td>
-      <td className={tdSticky("left-[4.5rem]", isP ? `${pc} text-center` : `${c2} min-w-[5rem] w-[5rem] max-w-[5rem]`)}>
+      <td
+        className={tdSticky(
+          "left-[4.5rem]",
+          isP
+            ? `${pc} text-center`
+            : `${c2} min-w-[5rem] w-[5rem] max-w-[5rem]`,
+        )}
+      >
         {record.shelfNo || "-"}
       </td>
-      <td className={tdSticky("left-[9.5rem]", isP ? `${pc} text-center` : `${c2} min-w-[5rem] w-[5rem] max-w-[5rem]`)}>
+      <td
+        className={tdSticky(
+          "left-[9.5rem]",
+          isP
+            ? `${pc} text-center`
+            : `${c2} min-w-[5rem] w-[5rem] max-w-[5rem]`,
+        )}
+      >
         {record.bundleNo || "-"}
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800"}>
-        {isP ? record.refNo || "-" : (
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800"
+        }
+      >
+        {isP ? (
+          record.refNo || "-"
+        ) : (
           <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-[#F0F0F0] px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
             {record.refNo || "-"}
           </span>
         )}
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        }
+      >
         {record.fileNo || "-"}
       </td>
-      <td className={isP ? `${pc} text-left` : "border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-left`
+            : "border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"
+        }
+      >
         <div
           className={
             isP
@@ -364,13 +683,31 @@ function RecordsDataRow({ record, variant }: { record: FileRecord; variant: "scr
           {record.subject}
         </div>
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        }
+      >
         {record.notePages}
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        }
+      >
         {record.correspondencePages}
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800"
+        }
+      >
         {isP ? (
           record.classification
         ) : (
@@ -381,22 +718,48 @@ function RecordsDataRow({ record, variant }: { record: FileRecord; variant: "scr
           </span>
         )}
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        }
+      >
         {isP ? (
           record.destructionDate
         ) : record.destructionDate === "कायम" ? (
-          <span className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">{record.destructionDate}</span>
+          <span className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+            {record.destructionDate}
+          </span>
         ) : (
           record.destructionDate
         )}
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        }
+      >
         {record.senderSignature || "-"}
       </td>
-      <td className={isP ? `${pc} text-center` : "border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center`
+            : "border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        }
+      >
         {record.receiverSignature || "-"}
       </td>
-      <td className={isP ? `${pc} text-left` : "border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-left`
+            : "border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"
+        }
+      >
         <div
           className={
             isP
@@ -407,7 +770,13 @@ function RecordsDataRow({ record, variant }: { record: FileRecord; variant: "scr
           {record.remarks}
         </div>
       </td>
-      <td className={isP ? `${pc} text-center font-medium` : "border-b border-slate-100 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}>
+      <td
+        className={
+          isP
+            ? `${pc} text-center font-medium`
+            : "border-b border-slate-100 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        }
+      >
         {record.pageRange}
       </td>
       {!isP ? (
@@ -422,7 +791,7 @@ function RecordsDataRow({ record, variant }: { record: FileRecord; variant: "scr
         </td>
       ) : null}
     </tr>
-  )
+  );
 }
 
 function RecordsPrintDocHeaderRow({
@@ -432,11 +801,11 @@ function RecordsPrintDocHeaderRow({
   totalCount,
   printedAt,
 }: {
-  title: string
-  branch: string
-  projectName: string
-  totalCount: number
-  printedAt: string
+  title: string;
+  branch: string;
+  projectName: string;
+  totalCount: number;
+  printedAt: string;
 }) {
   return (
     <tr className="records-print-doc-header-row">
@@ -444,68 +813,285 @@ function RecordsPrintDocHeaderRow({
         <div className="text-center leading-tight text-black">
           <div className="text-[11pt] font-bold">{title}</div>
           <div className="mt-1 text-[9pt] text-slate-800">{branch}</div>
-          <div className="mt-0.5 text-[9pt] font-semibold text-slate-900">{projectName}</div>
+          <div className="mt-0.5 text-[9pt] font-semibold text-slate-900">
+            {projectName}
+          </div>
           <div className="mt-2 text-[8pt] text-slate-600">
             एकूण नोंदी: {totalCount} · मुद्रित: {printedAt}
           </div>
         </div>
       </th>
     </tr>
-  )
+  );
 }
 
 export default function DashboardPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const availableColumns = ["Subject", "File No", "Remarks", "Shelf No"]
-  const [searchColumns, setSearchColumns] = useState<string[]>(availableColumns)
-  const [department, setDepartment] = useState("");
+  const router = useRouter();
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const availableColumns = ["Subject", "Remarks"];
+  const [searchColumns, setSearchColumns] =
+    useState<string[]>(availableColumns);
+  const [shelfNoFilter, setShelfNoFilter] = useState("");
+  const [gatthaNoFilter, setGatthaNoFilter] = useState("");
+  const [classificationFilter, setClassificationFilter] = useState("");
+  const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(false);
+  const [records, setRecords] = useState<FileRecord[]>([]);
+  const [recordsLoading, setRecordsLoading] = useState(false);
+  const [recordsError, setRecordsError] = useState<string | null>(null);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const toggleColumn = (col: string) => {
-    setSearchColumns(prev =>
-      prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]
-    )
-  }
+    setSearchColumns((prev) =>
+      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col],
+    );
+  };
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const availableProjects = [
-    "तारापूर अणुऊर्जा प्रकल्प ३ & ४",
-    "सुर्या प्रकल्प",
-  ];
-  const [selectedProject, setSelectedProject] = useState(availableProjects[0]);
+  const [selectedProject, setSelectedProject] = useState(fallbackProjects[0]);
+  const projectDropdownOptions =
+    projectOptions.length > 0
+      ? projectOptions.map((project) => ({
+          label: project.name,
+          value: project.name,
+        }))
+      : fallbackProjects.map((project) => ({ label: project, value: project }));
+  const defaultProjectId =
+    process.env.NEXT_PUBLIC_PROJECT_ID ??
+    "9eb63058-187a-4014-9c25-bf9142d31ac2";
+  const selectedProjectId =
+    projectOptions.find((project) => project.name === selectedProject)?.id ??
+    defaultProjectId;
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const authUser = localStorage.getItem("authUser");
+    if (!isLoggedIn || !authUser) {
+      setIsUnauthorized(true);
+      return;
+    }
+    setAuthChecked(true);
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchProjects = async () => {
+      setIsProjectsLoading(true);
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/projects`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) return;
+
+        const payload: unknown = await response.json().catch(() => null);
+        const parsedProjects = parseProjectsResponse(payload);
+        if (isCancelled || parsedProjects.length === 0) return;
+
+        setProjectOptions(parsedProjects);
+        setSelectedProject((current) =>
+          parsedProjects.some((project) => project.name === current)
+            ? current
+            : parsedProjects[0].name,
+        );
+      } catch {
+        // Keep fallback static project options when API is unavailable.
+      } finally {
+        if (!isCancelled) setIsProjectsLoading(false);
+      }
+    };
+
+    void fetchProjects();
+    return () => {
+      isCancelled = true;
+    };
+  }, [apiBaseUrl]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    selectedProject,
+    searchQuery,
+    searchColumns,
+    shelfNoFilter,
+    gatthaNoFilter,
+    classificationFilter,
+  ]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchRecords = async () => {
+      setRecordsLoading(true);
+      setRecordsError(null);
+      try {
+        const searchFieldMap: Record<string, string> = {
+          Subject: "subject",
+          "File No": "fileNo",
+          Remarks: "remarks",
+          "Shelf No": "shelfNo",
+        };
+        const mappedSearchFields = searchColumns
+          .map((column) => searchFieldMap[column])
+          .filter(Boolean);
+
+        const params = new URLSearchParams();
+        params.set("projectId", selectedProjectId);
+        params.set("page", String(Math.max(currentPage - 1, 0)));
+        params.set("size", String(itemsPerPage));
+        params.set("sortBy", "updatedAt");
+        params.set("sortDir", "desc");
+        if (searchQuery.trim()) params.set("search", searchQuery.trim());
+        if (mappedSearchFields.length > 0) {
+          params.set("searchFields", mappedSearchFields.join(","));
+        }
+        if (shelfNoFilter) params.set("shelfNo", shelfNoFilter);
+        if (gatthaNoFilter) params.set("gatthaNo", gatthaNoFilter);
+        if (classificationFilter)
+          params.set("classification", classificationFilter);
+
+        const response = await fetch(
+          `${apiBaseUrl}/api/records?${params.toString()}`,
+          {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch records.");
+        }
+
+        const payload: unknown = await response.json().catch(() => null);
+        const parsed = parseRecordsResponse(payload);
+        const content = Array.isArray(parsed.content) ? parsed.content : [];
+        const serialStart = Math.max(currentPage - 1, 0) * itemsPerPage;
+        const mappedRows: FileRecord[] = content.map((item, index) => ({
+          id: item.id ?? `row-${serialStart + index + 1}`,
+          serialNo: serialStart + index + 1,
+          shelfNo: stringifyCell(item.shelfNo),
+          bundleNo: stringifyCell(item.gatthaNo),
+          fileNo: stringifyCell(item.fileNo),
+          refNo: stringifyCell(item.collectorFileNo ?? item.legacyNo),
+          subject: stringifyCell(item.subject),
+          notePages: stringifyCell(item.notePages),
+          correspondencePages: stringifyCell(item.correspondencePages),
+          classification: stringifyCell(item.classification),
+          destructionDate: stringifyCell(item.destructionDate),
+          senderSignature: stringifyCell(item.senderSignature),
+          receiverSignature: stringifyCell(item.receiverSignature),
+          remarks: stringifyCell(item.remarks),
+          pageRange: stringifyCell(item.totalPages),
+        }));
+
+        if (isCancelled) return;
+        setRecords(mappedRows);
+        setTotalElements(parsed.totalElements ?? 0);
+        setTotalPages(parsed.totalPages ?? 0);
+      } catch (error) {
+        if (isCancelled) return;
+        setRecords([]);
+        setTotalElements(0);
+        setTotalPages(0);
+        setRecordsError(
+          error instanceof Error ? error.message : "Unable to fetch records.",
+        );
+      } finally {
+        if (!isCancelled) setRecordsLoading(false);
+      }
+    };
+
+    if (selectedProjectId) {
+      void fetchRecords();
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    apiBaseUrl,
+    selectedProjectId,
+    currentPage,
+    itemsPerPage,
+    searchQuery,
+    searchColumns,
+    shelfNoFilter,
+    gatthaNoFilter,
+    classificationFilter,
+  ]);
 
   // Text constants for Marathi content
   const TEXT = {
     title: "अभिलेख कक्षात पाठवावयाची प्रकरणे",
     branch: "शाखा / विभागाचे नाव : पुनर्वसन शाखा, जिल्हाधिकारी कार्यालय पालघर",
     projectName: `प्रकरणाचे नाव: ${selectedProject}`,
-  }
+  };
 
-  const filteredData = sampleData.filter((record) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-
-    if (searchColumns.includes("Subject") && record.subject.toLowerCase().includes(query)) return true;
-    if (searchColumns.includes("File No") && record.fileNo.toLowerCase().includes(query)) return true;
-    if (searchColumns.includes("Remarks") && record.remarks.toLowerCase().includes(query)) return true;
-    if (searchColumns.includes("Shelf No") && record.shelfNo.toLowerCase().includes(query)) return true;
-
-    return false;
-  })
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const paginatedData = filteredData.slice(startIndex, endIndex)
+  const displayStart =
+    totalElements === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const displayEnd = Math.min(currentPage * itemsPerPage, totalElements);
 
   const handleItemsPerPageChange = (value: number) => {
-    setItemsPerPage(value)
-    setCurrentPage(1)
-  }
+    setItemsPerPage(value);
+    setCurrentPage(1);
+  };
 
   const handlePrint = () => {
-    window.print()
+    window.print();
+  };
+
+  const handleGoToLogin = () => {
+    router.replace("/login");
+  };
+
+  if (!authChecked && !isUnauthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+        Checking access...
+      </div>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+        <Dialog open={isUnauthorized}>
+          <DialogContent
+            showCloseButton={false}
+            className="max-w-md rounded-2xl border border-red-200/70 bg-white/95 p-0 shadow-2xl dark:border-red-900/60 dark:bg-slate-900/95"
+          >
+            <DialogHeader className="border-b border-red-100 bg-gradient-to-r from-red-50 to-orange-50 px-6 py-5 dark:border-red-900/40 dark:from-red-950/40 dark:to-orange-950/20">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <DialogTitle className="text-xl text-slate-900 dark:text-slate-100">
+                Access Denied
+              </DialogTitle>
+              <DialogDescription className="pt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                You must login first to view this page. Please sign in to continue.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="px-6 py-4 sm:justify-end">
+              <Button
+                type="button"
+                onClick={handleGoToLogin}
+                className="w-full sm:w-auto"
+              >
+                Go to Login
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   }
 
   return (
@@ -525,12 +1111,21 @@ export default function DashboardPage() {
           className="object-cover object-[50%_35%]"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/82 via-indigo-900/72 to-slate-800/78" aria-hidden />
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-slate-900/82 via-indigo-900/72 to-slate-800/78"
+          aria-hidden
+        />
         <div className="relative z-10 mx-auto flex h-full max-w-[1600px] items-center justify-center px-3 text-center sm:px-4">
           <div className="max-w-4xl space-y-0 leading-tight drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">
-            <h1 className="text-[13px] font-bold text-white sm:text-sm md:text-[0.9375rem]">{TEXT.title}</h1>
-            <p className="text-[11px] font-medium text-white/90 sm:text-xs">{TEXT.branch}</p>
-            <p className="text-[11px] font-semibold text-indigo-100 sm:text-xs">{TEXT.projectName}</p>
+            <h1 className="text-[13px] font-bold text-white sm:text-sm md:text-[0.9375rem]">
+              {TEXT.title}
+            </h1>
+            <p className="text-[11px] font-medium text-white/90 sm:text-xs">
+              {TEXT.branch}
+            </p>
+            <p className="text-[11px] font-semibold text-indigo-100 sm:text-xs">
+              {TEXT.projectName}
+            </p>
           </div>
         </div>
       </section>
@@ -545,10 +1140,13 @@ export default function DashboardPage() {
               Select Project / प्रकल्प निवडा:
             </label>
             <CustomDropdown
-              placeholder="Select Project"
-              options={availableProjects.map((p) => ({ label: p, value: p }))}
+              placeholder={
+                isProjectsLoading ? "Loading projects..." : "Select Project"
+              }
+              options={projectDropdownOptions}
               value={selectedProject}
               onChange={setSelectedProject}
+              disabled={isProjectsLoading}
               className="w-full max-w-[350px]"
             />
           </div>
@@ -572,7 +1170,9 @@ export default function DashboardPage() {
             >
               <div className="relative z-[110] flex w-full max-w-full flex-wrap items-center gap-4 p-4 lg:flex-nowrap">
                 <div className="flex min-h-10 w-full min-w-0 items-center gap-2 sm:gap-3 lg:w-[40%] lg:max-w-[40%] lg:shrink-0">
-                  <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Search:</span>
+                  <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Search:
+                  </span>
                   <div className="relative flex h-10 min-w-0 flex-1 overflow-visible rounded-lg border border-slate-200 bg-[#F7F7F7] transition-colors focus-within:bg-[#FAFAFA] focus-within:ring-2 focus-within:ring-slate-300 dark:border-slate-600 dark:bg-slate-900/40 dark:focus-within:bg-slate-900/60 dark:focus-within:ring-slate-500">
                     <div className="relative h-full min-w-0 flex-1">
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -591,7 +1191,9 @@ export default function DashboardPage() {
                           className="flex h-full min-w-[110px] shrink-0 cursor-pointer items-center justify-between gap-1.5 rounded-r-lg border-l border-slate-200 bg-transparent px-3 text-sm text-slate-600 transition-colors hover:bg-[#F0F0F0] focus:outline-none dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
                           <span className="max-w-[80px] truncate">
-                            {searchColumns.length === availableColumns.length ? "All" : `${searchColumns.length} Selected`}
+                            {searchColumns.length === availableColumns.length
+                              ? "All"
+                              : `${searchColumns.length} Selected`}
                           </span>
                           <ChevronDown className="h-4 w-4 text-slate-400" />
                         </button>
@@ -622,7 +1224,9 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-3 text-left text-[14px] lg:w-0 lg:min-w-0">
-                  <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
+                  <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Filters:
+                  </span>
                   <CustomDropdown
                     placeholder="Select a Shelf No"
                     options={[
@@ -631,27 +1235,33 @@ export default function DashboardPage() {
                       { label: "3", value: "3" },
                       { label: "4", value: "4" },
                     ]}
-                    value={department}
-                    onChange={(val) => setDepartment(val)}
+                    value={shelfNoFilter}
+                    onChange={setShelfNoFilter}
                     showSearch={true}
                     className="min-w-[140px] flex-1 sm:max-w-[220px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                   />
                   <CustomDropdown
                     placeholder="Select Gattha No"
-                    options={Array.from({ length: 4 }).map((_, i) => ({ label: `${i + 1}`, value: `${i + 1}` }))}
-                    value=""
-                    onChange={() => {}}
+                    options={Array.from({ length: 4 }).map((_, i) => ({
+                      label: `${i + 1}`,
+                      value: `${i + 1}`,
+                    }))}
+                    value={gatthaNoFilter}
+                    onChange={setGatthaNoFilter}
                     className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                   />
                   <CustomDropdown
-                    placeholder="Select Priority"
+                    placeholder="Select Information Level"
+                    // (अ,ब,क,क-1, ड)
                     options={[
-                      { label: "High", value: "High" },
-                      { label: "Medium", value: "Medium" },
-                      { label: "Low", value: "Low" },
+                      { label: "अ", value: "अ" },
+                      { label: "ब", value: "ब" },
+                      { label: "क", value: "क" },
+                      { label: "क-1", value: "क-1" },
+                      { label: "ड", value: "ड" },
                     ]}
-                    value=""
-                    onChange={() => {}}
+                    value={classificationFilter}
+                    onChange={setClassificationFilter}
                     className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                   />
                 </div>
@@ -664,9 +1274,42 @@ export default function DashboardPage() {
                   <RecordsTableHeaderRows variant="screen" />
                 </thead>
                 <tbody>
-                  {paginatedData.map((record) => (
-                    <RecordsDataRow key={record.id} record={record} variant="screen" />
-                  ))}
+                  {recordsLoading ? (
+                    <tr>
+                      <td
+                        colSpan={14}
+                        className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400"
+                      >
+                        Loading records...
+                      </td>
+                    </tr>
+                  ) : recordsError ? (
+                    <tr>
+                      <td
+                        colSpan={14}
+                        className="px-3 py-6 text-center text-sm text-red-600 dark:text-red-400"
+                      >
+                        {recordsError}
+                      </td>
+                    </tr>
+                  ) : records.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={14}
+                        className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400"
+                      >
+                        No records found for selected filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    records.map((record) => (
+                      <RecordsDataRow
+                        key={record.id}
+                        record={record}
+                        variant="screen"
+                      />
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -678,14 +1321,21 @@ export default function DashboardPage() {
                     title={TEXT.title}
                     branch={TEXT.branch}
                     projectName={TEXT.projectName}
-                    totalCount={filteredData.length}
-                    printedAt={new Date().toLocaleString("mr-IN", { dateStyle: "medium", timeStyle: "short" })}
+                    totalCount={totalElements}
+                    printedAt={new Date().toLocaleString("mr-IN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
                   />
                   <RecordsTableHeaderRows variant="print" />
                 </thead>
                 <tbody>
-                  {filteredData.map((record) => (
-                    <RecordsDataRow key={`print-${record.id}`} record={record} variant="print" />
+                  {records.map((record) => (
+                    <RecordsDataRow
+                      key={`print-${record.id}`}
+                      record={record}
+                      variant="print"
+                    />
                   ))}
                 </tbody>
               </table>
@@ -694,15 +1344,19 @@ export default function DashboardPage() {
             <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] px-6 py-4 print:hidden dark:border-slate-700 dark:from-slate-800 dark:to-slate-800 sm:flex-row [@media(min-width:1024px)_and_(max-height:760px)]:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:py-2.5">
               <div className="flex flex-wrap items-center gap-4">
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-                  <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span> of{" "}
-                  <span className="font-medium">{filteredData.length}</span>
+                  Showing <span className="font-medium">{displayStart}</span> to{" "}
+                  <span className="font-medium">{displayEnd}</span> of{" "}
+                  <span className="font-medium">{totalElements}</span>
                 </p>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Items per page:
+                  </span>
                   <select
                     value={itemsPerPage}
-                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    onChange={(e) =>
+                      handleItemsPerPageChange(Number(e.target.value))
+                    }
                     className="w-20 rounded-md border border-slate-300 bg-[#FAFAFA] px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   >
                     {[5, 10, 20, 50].map((value) => (
@@ -717,33 +1371,44 @@ export default function DashboardPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1 || recordsLoading}
                   className="border-slate-300 dark:border-slate-600"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Prev
                 </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className={
-                      currentPage === page
-                        ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md"
-                        : "border-slate-300 dark:border-slate-600"
-                    }
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      disabled={recordsLoading}
+                      className={
+                        currentPage === page
+                          ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md"
+                          : "border-slate-300 dark:border-slate-600"
+                      }
+                    >
+                      {page}
+                    </Button>
+                  ),
+                )}
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={
+                    currentPage === totalPages ||
+                    totalPages === 0 ||
+                    recordsLoading
+                  }
                   className="border-slate-300 dark:border-slate-600"
                 >
                   Next
@@ -755,5 +1420,5 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

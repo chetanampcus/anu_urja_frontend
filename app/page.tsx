@@ -4,6 +4,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import * as XLSX from 'xlsx';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { Search, ChevronDown, ChevronLeft, ChevronRight, Check, Upload, FileText, Link as LinkIcon, CheckCircle, AlertCircle, Loader2, UploadCloud, X, Table2, FileStack } from "lucide-react";
 import CustomDropdown from "./component/CustomDropdown";
@@ -35,15 +36,33 @@ interface LogEntry {
   timestamp: number;
 }
 
-interface PDFMapping {
+interface BatchImportResponse {
+  executionId?: number;
+  message?: string;
+}
+
+interface BatchStatusEvent {
+  level: string;
+  message: string;
+  timestamp: string;
+}
+
+interface BatchStatusResponse {
+  events?: BatchStatusEvent[];
+  executionId?: number;
+  status?: string;
+  message?: string;
+}
+
+interface MappingLogEntry {
+  level?: string;
+  message: string;
+  timestamp?: string | number;
+}
+
+interface ProjectOption {
   id: string;
-  recordId: string;
-  pdfName: string;
-  pdfSize: number;
-  pdfUrl?: string;
-  status: 'pending' | 'matched' | 'verified';
-  confidence?: number;
-  matchedAt?: number;
+  name: string;
 }
 
 // ==================== Helper Components ====================
@@ -127,34 +146,105 @@ function LogsPanel({ logs, darkMode }: { logs: LogEntry[]; darkMode: boolean }) 
 }
 
 // Mapping Logger Component (Same design as Progress Log)
-function MappingLogger({ logs, darkMode }: { logs: string[]; darkMode: boolean }) {
+function MappingLogger({ logs, darkMode }: { logs: MappingLogEntry[]; darkMode: boolean }) {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
 
+  const getMappingType = (log: MappingLogEntry): LogEntry["type"] => {
+    const level = (log.level ?? "").toLowerCase();
+    const message = log.message.toLowerCase();
+
+    if (level.includes("error")) return "error";
+    if (level.includes("success")) return "success";
+    if (level.includes("processing")) return "processing";
+    if (level.includes("info")) return "info";
+
+    if (/error|failed|unable|could not/.test(message)) return "error";
+    if (/starting|started|triggering|retrying|processing/.test(message)) return "processing";
+    if (/completed|finished|imported successfully|already mapped|linked=/.test(message)) return "success";
+    return "info";
+  };
+
+  const getLogIcon = (type: LogEntry["type"]) => {
+    switch (type) {
+      case "success":
+        return "✅";
+      case "error":
+        return "❌";
+      case "processing":
+        return "⏳";
+      default:
+        return "ℹ️";
+    }
+  };
+
   return (
-    <div className={`rounded-lg overflow-hidden border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-      <div className={`px-4 py-3 border-b font-medium ${darkMode ? 'border-gray-700 bg-gray-800/50 text-gray-200' : 'border-gray-200 bg-gray-50 text-gray-700'}`}>
+    <div
+      className={`rounded-xl overflow-hidden border shadow-sm ${
+        darkMode ? "border-slate-600 bg-slate-800/40" : "border-slate-200 bg-white/90"
+      }`}
+    >
+      <div
+        className={`px-4 py-2.5 border-b text-sm font-semibold tracking-tight ${
+          darkMode
+            ? "border-slate-600 bg-slate-800/80 text-slate-100"
+            : "border-slate-200 bg-slate-50 text-slate-800"
+        }`}
+      >
         📋 Mapping Logger
       </div>
-      <div className="h-64 overflow-y-auto p-3 space-y-2">
+      <div className="max-h-72 overflow-y-auto p-3 space-y-2 [scrollbar-width:thin]">
         {logs.length === 0 ? (
-          <p className={`text-sm text-center py-8 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          <p className={`text-sm text-center py-10 ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
             No mapping logs yet. Click "Complete Stage 2" to start mapping.
           </p>
         ) : (
-          logs.map((log, index) => (
-            <div
-              key={index}
-              className={`text-sm py-1.5 px-2 rounded transition-all duration-200 ${darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'
-                }`}
-            >
-              <span className="mr-2">📄</span>
-              <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{log}</span>
-            </div>
-          ))
+          logs.map((log, index) => {
+            const type = getMappingType(log);
+            const accent =
+              type === "success"
+                ? darkMode
+                  ? "border-l-emerald-500 bg-emerald-950/25"
+                  : "border-l-emerald-500 bg-emerald-50/80"
+                : type === "error"
+                  ? darkMode
+                    ? "border-l-red-500 bg-red-950/20"
+                    : "border-l-red-500 bg-red-50/80"
+                  : type === "processing"
+                    ? darkMode
+                      ? "border-l-amber-400 bg-amber-950/20"
+                      : "border-l-amber-500 bg-amber-50/70"
+                    : darkMode
+                      ? "border-l-sky-500 bg-sky-950/20"
+                      : "border-l-sky-500 bg-sky-50/70";
+
+            return (
+              <div
+                key={`${log.timestamp ?? "no-ts"}-${index}`}
+                className={`animate-log-line-in flex items-start gap-2 text-sm py-2.5 pl-3 pr-2 rounded-lg border-l-[3px] shadow-sm transition-colors duration-200 ${accent} ${darkMode ? "hover:bg-white/5" : "hover:bg-white"}`}
+              >
+                <span
+                  className={`mt-0.5 shrink-0 text-base leading-none ${type === "processing" ? "animate-pulse" : "animate-log-icon-pop"}`}
+                  aria-hidden
+                >
+                  {getLogIcon(type)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <span className={`block leading-snug ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
+                    {log.message}
+                  </span>
+                  {log.timestamp ? (
+                    <span className={`mt-0.5 block text-[11px] tabular-nums ${darkMode ? "text-slate-500" : "text-slate-500"}`}>
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })
         )}
         <div ref={logsEndRef} />
       </div>
@@ -241,6 +331,37 @@ const availableColumns = ["Subject", "File No", "Remarks", "Shelf No"];
 
 const EXCEL_ACCEPT =
   ".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel";
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function parseProjectsResponse(payload: unknown): ProjectOption[] {
+  const root = toRecord(payload);
+  const candidates =
+    (Array.isArray(payload) && payload) ||
+    (root && Array.isArray(root.projects) && root.projects) ||
+    (root && Array.isArray(root.data) && root.data) ||
+    [];
+
+  const seenIds = new Set<string>();
+  const parsed: ProjectOption[] = [];
+
+  for (const item of candidates) {
+    const row = toRecord(item);
+    if (!row) continue;
+    const idValue = row.id ?? row.projectId ?? row.uuid;
+    const nameValue = row.name ?? row.projectName ?? row.title ?? row.label;
+    const id = typeof idValue === "string" ? idValue.trim() : "";
+    const name = typeof nameValue === "string" ? nameValue.trim() : "";
+    if (!id || !name || seenIds.has(id)) continue;
+    seenIds.add(id);
+    parsed.push({ id, name });
+  }
+
+  return parsed;
+}
 
 function isExcelFile(file: File): boolean {
   const lower = file.name.toLowerCase();
@@ -449,7 +570,11 @@ const steps: { key: StepKey; label: string; icon: LucideIcon }[] = [
 ];
 
 export default function Home() {
+  const router = useRouter();
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
   const [mounted, setMounted] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -459,20 +584,79 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState<StepKey>('upload');
   const [selectedProject, setSelectedProject] = useState("तारापूर अणुऊर्जा प्रकल्प ३ & ४");
+  const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchColumns, setSearchColumns] = useState<string[]>(availableColumns);
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
-  const [pdfMappings, setPdfMappings] = useState<PDFMapping[]>([]);
+  const [executionId, setExecutionId] = useState<number | null>(null);
+  const [isPdfMapping, setIsPdfMapping] = useState(false);
   const columnMenuRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [checks, setChecks] = useState([false, false, false, false]);
   const [stage2Completed, setStage2Completed] = useState(false);
-  const [mappingLogs, setMappingLogs] = useState<string[]>([]);
+  const [mappingLogs, setMappingLogs] = useState<MappingLogEntry[]>([]);
 
   const allChecked = checks.every(Boolean);
+  const defaultProjectId =
+    process.env.NEXT_PUBLIC_PROJECT_ID ?? "9eb63058-187a-4014-9c25-bf9142d31ac2";
+  const defaultDataStartRow = Number(
+    process.env.NEXT_PUBLIC_IMPORT_DATA_START_ROW ?? 6,
+  );
+  const defaultDocumentNamesColumnIndex = Number(
+    process.env.NEXT_PUBLIC_DOCUMENT_NAMES_COLUMN_INDEX ?? 12,
+  );
+  const projectDropdownOptions =
+    projectOptions.length > 0
+      ? projectOptions.map((project) => ({ label: project.name, value: project.name }))
+      : availableProjects.map((project) => ({ label: project, value: project }));
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchProjects = async () => {
+      setIsProjectsLoading(true);
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/projects`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) return;
+
+        const payload: unknown = await response.json().catch(() => null);
+        const parsedProjects = parseProjectsResponse(payload);
+        if (isCancelled || parsedProjects.length === 0) return;
+
+        setProjectOptions(parsedProjects);
+        setSelectedProject((current) =>
+          parsedProjects.some((project) => project.name === current)
+            ? current
+            : parsedProjects[0].name,
+        );
+      } catch {
+        // Keep fallback static project options when API is unavailable.
+      } finally {
+        if (!isCancelled) setIsProjectsLoading(false);
+      }
+    };
+
+    void fetchProjects();
+    return () => {
+      isCancelled = true;
+    };
+  }, [apiBaseUrl]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (!input.files?.length) return;
+    const excel = firstExcelFile(input.files);
+    input.value = "";
+    if (excel) setFiles([excel]);
+  };
+
+  // Clears all selected files
   const handleCancelFiles = () => {
     abortControllerRef.current?.abort();
     setFiles([]);
@@ -517,11 +701,6 @@ export default function Home() {
     );
   };
 
-  // Helper function to add logs to mapping logger
-  const addLogToMapping = (message: string) => {
-    setMappingLogs(prev => [...prev, message]);
-  };
-
   // Check if step is completed
   const isStepCompleted = (stepKey: StepKey): boolean => {
     if (stepKey === 'upload') return allRecords.length > 0;
@@ -549,38 +728,132 @@ export default function Home() {
   };
 
   const handleCompleteStage2 = async () => {
-    if (allChecked) {
+    if (!allChecked) return;
+
+    if (files.length === 0) {
       setStage2Completed(true);
-      setMappingLogs([]);
+      setMappingLogs([{ level: "ERROR", message: "Please select and process an Excel file first." }]);
+      return;
+    }
 
-      addLogToMapping(`🚀 Starting PDF Mapping Process for "${selectedProject}"...`);
-      await new Promise(resolve => setTimeout(resolve, 500));
+    setStage2Completed(true);
+    setIsPdfMapping(true);
+    setExecutionId(null);
+    setMappingLogs([{ level: "PROCESSING", message: "Starting batch import..." }]);
 
-      addLogToMapping(`📁 Scanning for PDF files in folder structure...`);
-      await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const selectedExcelFile = files[0];
+      const selectedProjectId =
+        projectOptions.find((project) => project.name === selectedProject)?.id ??
+        defaultProjectId;
+      const importRequestFormData = new FormData();
+      importRequestFormData.append("file", selectedExcelFile);
+      importRequestFormData.append("dataStartRow", String(defaultDataStartRow));
+      importRequestFormData.append(
+        "documentNamesColumnIndex",
+        String(defaultDocumentNamesColumnIndex),
+      );
+      importRequestFormData.append("projectId", selectedProjectId);
+      importRequestFormData.append("projectName", selectedProject);
 
-      addLogToMapping(`📊 Found ${allRecords.length} records to map`);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const importResponse = await fetch(`${apiBaseUrl}/api/batch/records/import`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+        body: importRequestFormData,
+      });
 
-      let mappedCount = 0;
-      for (let i = 0; i < Math.min(allRecords.length, 15); i++) {
-        const record = allRecords[i];
-        await new Promise(resolve => setTimeout(resolve, 200));
+      const importPayload: BatchImportResponse = await importResponse
+        .json()
+        .catch(() => ({}));
 
-        if (record.fileNo && record.fileNo !== '-') {
-          addLogToMapping(`✅ Matched: ${record.fileNo}.pdf → Record #${record.serialNo} (${record.subject.substring(0, 40)}...)`);
-          mappedCount++;
-        } else {
-          addLogToMapping(`⚠️ No match found for record #${record.serialNo} (missing file number)`);
+      if (!importResponse.ok) {
+        throw new Error(importPayload?.message || "Batch import API failed.");
+      }
+
+      if (typeof importPayload.executionId !== "number") {
+        throw new Error("Batch import succeeded but executionId is missing.");
+      }
+
+      const currentExecutionId = importPayload.executionId;
+      setExecutionId(currentExecutionId);
+      setMappingLogs([
+        { level: "SUCCESS", message: "Batch import completed." },
+        { level: "INFO", message: `Execution ID: ${currentExecutionId}` },
+        { level: "PROCESSING", message: "Triggering PDF mapping..." },
+      ]);
+
+      const mappingResponse = await fetch(
+        `${apiBaseUrl}/api/batch/records/import/${currentExecutionId}/pdf-map`,
+        {
+          method: "POST",
+          headers: { Accept: "application/json" },
+        },
+      );
+
+      if (!mappingResponse.ok) {
+        const failedPayload = await mappingResponse.json().catch(() => ({}));
+        throw new Error(
+          failedPayload?.message || "Failed to start PDF mapping.",
+        );
+      }
+
+      // Poll combined status and render all event messages (Excel + PDF mapping)
+      for (let attempt = 0; attempt < 45; attempt++) {
+        const statusResponse = await fetch(
+          `${apiBaseUrl}/api/batch/records/import/${currentExecutionId}/status`,
+          {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          },
+        );
+
+        if (!statusResponse.ok) {
+          if (attempt === 0) {
+            setMappingLogs((prev) => [
+              ...prev,
+              { level: "INFO", message: "Could not read status right now. Retrying..." },
+            ]);
+          }
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          continue;
         }
-      }
 
-      if (allRecords.length > 15) {
-        addLogToMapping(`... and ${allRecords.length - 15} more records processed`);
-      }
+        const statusPayload: BatchStatusResponse = await statusResponse.json();
+        const statusEvents =
+          statusPayload.events
+            ?.map((event) => ({
+              level: event.level,
+              message: event.message?.trim() ?? "",
+              timestamp: event.timestamp,
+            }))
+            .filter((event) => event.message.length > 0) ?? [];
 
-      await new Promise(resolve => setTimeout(resolve, 500));
-      addLogToMapping(`🎉 Mapping completed! ${mappedCount} out of ${allRecords.length} files matched successfully.`);
+        if (statusEvents.length > 0) {
+          setMappingLogs(statusEvents);
+        }
+
+        const mappingFinished = statusEvents.some((event) =>
+          /pdf mapping finished/i.test(event.message),
+        );
+
+        if (mappingFinished) {
+          break;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    } catch (error) {
+      setMappingLogs((prev) => [
+        ...prev,
+        {
+          level: "ERROR",
+          message: error instanceof Error ? error.message : "PDF mapping failed.",
+        },
+      ]);
+    } finally {
+      setIsPdfMapping(false);
     }
   };
 
@@ -600,6 +873,16 @@ export default function Home() {
     if (savedMode) {
       setDarkMode(savedMode === 'true');
     }
+  }, []);
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const authUser = localStorage.getItem("authUser");
+    if (!isLoggedIn || !authUser) {
+      setIsUnauthorized(true);
+      return;
+    }
+    setAuthChecked(true);
   }, []);
 
   useEffect(() => {
@@ -627,7 +910,7 @@ export default function Home() {
 
   const runExtractionForFiles = useCallback(
     async (fileList: File[]) => {
-      if (fileList.length === 0) return;
+      if (fileList.length === 0 || isProcessing) return;
 
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
@@ -638,80 +921,59 @@ export default function Home() {
       setLogs([]);
       setAllRecords([]);
       setSheetsList([]);
-      setCurrentPage(1);
+      setExecutionId(null);
+      setStage2Completed(false);
+      setMappingLogs([]);
 
-      addLog(`🚀 Starting processing of ${fileList.length} file(s)...`, 'info');
-      addLog(`📁 Selected Project: ${selectedProject}`, 'info');
+      addLog(`🚀 Starting processing of ${fileList.length} file(s)...`, "info");
+      addLog(`📁 Selected Project: ${selectedProject}`, "info");
 
       let totalRecords = 0;
 
       try {
-        try {
-          for (let i = 0; i < fileList.length; i++) {
-            if (ac.signal.aborted) {
-              addLog("⏹️ Processing cancelled by user.", "error");
-              break;
-            }
-
-            const file = fileList[i];
-            addLog(`⏳ Processing: ${file.name} (${formatFileSize(file.size)})`, "processing");
-
-            const result = await extractAllRecordsFromExcel(file);
-
-            if (ac.signal.aborted) break;
-
-            if (result.records.length > 0) {
-              totalRecords += result.records.length;
-              setAllRecords((prev) => [...prev, ...result.records]);
-              setSheetsList((prev) => [...prev, ...result.sheets]);
-
-              addLog(
-                `✅ Completed: ${file.name} - Found ${result.sheets.length} sheets with ${result.records.length} records`,
-                "success"
-              );
-
-              result.sheets.forEach((sheet, idx) => {
-                addLog(
-                  `   ${idx + 1}. ${sheet.name} - ${sheet.rowCount.toLocaleString()} records imported successfully`,
-                  "info"
-                );
-              });
-            } else {
-              addLog(`❌ Error: ${file.name} - Failed to extract records`, "error");
-            }
-
-            setProgress(((i + 1) / fileList.length) * 100);
+        for (let i = 0; i < fileList.length; i++) {
+          if (ac.signal.aborted) {
+            addLog("⏹️ Processing cancelled by user.", "error");
+            break;
           }
 
-          if (!ac.signal.aborted) {
-            addLog(`🏁 Processing finished. Total records: ${totalRecords}`, "info");
-          }
-        } finally {
-          setIsProcessing(false);
-        }
+          const file = fileList[i];
+          addLog(`⏳ Processing: ${file.name} (${formatFileSize(file.size)})`, "processing");
 
-        if (!ac.signal.aborted && totalRecords > 0) {
-          setProgress(100);
-          await new Promise<void>((resolve) => {
-            const id = window.setTimeout(resolve, 5000);
-            ac.signal.addEventListener(
-              "abort",
-              () => {
-                window.clearTimeout(id);
-                resolve();
-              },
-              { once: true }
+          const result = await extractAllRecordsFromExcel(file);
+          if (ac.signal.aborted) break;
+
+          if (result.records.length > 0) {
+            totalRecords += result.records.length;
+            setAllRecords((prev) => [...prev, ...result.records]);
+            setSheetsList((prev) => [...prev, ...result.sheets]);
+
+            addLog(
+              `✅ Completed: ${file.name} - Found ${result.sheets.length} sheets with ${result.records.length} records`,
+              "success",
             );
-          });
-          if (!ac.signal.aborted) {
-            setActiveTab("records");
+
+            result.sheets.forEach((sheet, idx) => {
+              addLog(
+                `   ${idx + 1}. ${sheet.name} - ${sheet.rowCount.toLocaleString()} records imported successfully`,
+                "info",
+              );
+            });
+          } else {
+            addLog(`❌ Error: ${file.name} - Failed to extract records`, "error");
           }
+
+          setProgress(((i + 1) / fileList.length) * 100);
         }
+
+        addLog(`🏁 Processing finished. Total records: ${totalRecords}`, "info");
+        addLog("ℹ️ Click Complete Stage 2 to run batch import and PDF mapping.", "info");
       } finally {
+        setIsProcessing(false);
         abortControllerRef.current = null;
       }
     },
-    [addLog, formatFileSize, selectedProject, setActiveTab]
+    [addLog, formatFileSize, isProcessing, selectedProject],
   );
 
   const processFiles = useCallback(() => {
@@ -731,19 +993,19 @@ export default function Home() {
     []
   );
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    if (!input.files?.length) return;
-    const excel = firstExcelFile(input.files);
-    input.value = "";
-    if (excel) {
-      setFiles([excel]);
-      setSheetsList([]);
-      setAllRecords([]);
-      setLogs([]);
-      setProgress(0);
-    }
-  };
+  // const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const input = e.target;
+  //   if (!input.files?.length) return;
+  //   const excel = firstExcelFile(input.files);
+  //   input.value = "";
+  //   if (excel) {
+  //     setFiles([excel]);
+  //     setSheetsList([]);
+  //     setAllRecords([]);
+  //     setLogs([]);
+  //     setProgress(0);
+  //   }
+  // };
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -790,6 +1052,47 @@ export default function Home() {
     else if (stepKey === "records" && allRecords.length > 0) setActiveTab("records");
     else if (stepKey === "mapping" && allRecords.length > 0) setActiveTab("mapping");
   };
+
+  const handleGoToLogin = () => {
+    router.replace("/login");
+  };
+
+  if (!authChecked && !isUnauthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+        Checking access...
+      </div>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+        <div className="w-full max-w-md rounded-2xl border border-red-200/70 bg-white/95 p-0 shadow-2xl dark:border-red-900/60 dark:bg-slate-900/95">
+          <div className="border-b border-red-100 bg-gradient-to-r from-red-50 to-orange-50 px-6 py-5 dark:border-red-900/40 dark:from-red-950/40 dark:to-orange-950/20">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+              Access Denied
+            </h2>
+            <p className="pt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              You must login first to view this page. Please sign in to continue.
+            </p>
+          </div>
+          <div className="px-6 py-4">
+            <button
+              type="button"
+              onClick={handleGoToLogin}
+              className="inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -911,10 +1214,10 @@ export default function Home() {
                   </label>
                   <CustomDropdown
                     placeholder="Select Project"
-                    options={availableProjects.map(p => ({ label: p, value: p }))}
+                    options={projectDropdownOptions}
                     value={selectedProject}
                     onChange={setSelectedProject}
-                    disabled={isProjectDisabled}
+                    disabled={isProjectDisabled || isProjectsLoading}
                     className="w-full max-w-full"
                   />
                 </div>
@@ -1276,6 +1579,13 @@ export default function Home() {
                       {allRecords.length} Records Available for Mapping
                     </span>
                   </div>
+                  {executionId !== null ? (
+                    <div className="flex shrink-0 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/70 px-3 py-1.5 dark:border-emerald-900/50 dark:bg-emerald-950/25">
+                      <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                        Execution ID: {executionId}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
                 <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 sm:mt-4">
                   Link scanned PDF files to their corresponding extracted records. Auto-matching uses filename patterns against record metadata.
@@ -1293,7 +1603,7 @@ export default function Home() {
               </div>
               <div className="flex justify-end gap-3 mt-6">
                 <button onClick={() => { setChecks([false, false, false, false]); setStage2Completed(false); setMappingLogs([]); }} className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">Reset</button>
-                <button onClick={handleCompleteStage2} disabled={!allChecked} className={`px-4 py-2 rounded-lg text-white transition-all ${allChecked ? 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg' : 'bg-gray-400 cursor-not-allowed'}`}>Complete Stage 2</button>
+                <button onClick={handleCompleteStage2} disabled={!allChecked || isPdfMapping} className={`px-4 py-2 rounded-lg text-white transition-all ${allChecked && !isPdfMapping ? 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg' : 'bg-gray-400 cursor-not-allowed'}`}>{isPdfMapping ? "Running..." : "Complete Stage 2"}</button>
               </div>
             </div>
 

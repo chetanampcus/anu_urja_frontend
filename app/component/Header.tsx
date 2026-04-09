@@ -140,6 +140,14 @@ const Header = () => {
 
 const ProfileMenu = () => {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("isLoggedIn");
+    setOpen(false);
+    router.replace("/login");
+  };
 
   return (
     <div style={{ position: 'relative' }}>
@@ -195,6 +203,7 @@ const ProfileMenu = () => {
           </button>
 
           <button
+            onClick={handleLogout}
             style={{
               display: 'flex',
               alignItems: 'center',
