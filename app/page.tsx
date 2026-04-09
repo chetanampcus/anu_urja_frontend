@@ -631,13 +631,13 @@ export default function Home() {
     >
       <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-3 py-2 sm:px-4 sm:py-3 lg:py-4 [@media(min-width:1024px)_and_(max-height:760px)]:px-3 [@media(min-width:1024px)_and_(max-height:760px)]:py-1.5">
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:items-stretch lg:gap-6 [@media(min-width:1024px)_and_(max-height:760px)]:lg:gap-4">
-          {/* Left: stepper — scrolls inside when vertical space is tight; compact on ~1366×737 laptops */}
-          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink overflow-hidden self-stretch lg:max-h-none lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-[16%] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-w-[8.5rem] [@media(min-width:1024px)_and_(max-height:760px)]:lg:max-w-[11rem]">
-            <div className="flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-5 lg:min-h-0 lg:flex-1 [@media(min-width:1024px)_and_(max-height:760px)]:p-2.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2.5">
+          {/* Left: stepper — ~30% shorter than full column (max 70% height); whole column scrolls on lg if needed */}
+          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink overflow-hidden self-stretch [scrollbar-width:thin] lg:max-h-[70%] lg:min-h-0 lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 lg:self-start lg:overflow-y-auto lg:overflow-x-hidden [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-[16%] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-w-[8.5rem] [@media(min-width:1024px)_and_(max-height:760px)]:lg:max-w-[11rem]">
+            <div className="flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-5 lg:h-auto lg:max-h-none lg:min-h-0 [@media(min-width:1024px)_and_(max-height:760px)]:p-2.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2.5">
               <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-4 [@media(min-width:1024px)_and_(max-height:760px)]:mb-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:mb-1.5">
                 Progress
               </p>
-              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-3 pr-0.5 [scrollbar-width:thin]">
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-3 pr-0.5 [scrollbar-width:thin] lg:flex-none lg:overflow-visible">
                 {steps.map((step, index) => {
                   const isActive = activeTab === step.key;
                   const isCompleted = isStepCompleted(step.key);
@@ -715,7 +715,7 @@ export default function Home() {
                   );
                 })}
               </div>
-              <div className="mt-auto shrink-0 border-t border-slate-100 pt-3 dark:border-slate-600 [@media(min-width:1024px)_and_(max-height:760px)]:pt-2">
+              <div className="mt-4 shrink-0 border-t border-slate-100 pt-3 dark:border-slate-600 [@media(min-width:1024px)_and_(max-height:760px)]:mt-3 [@media(min-width:1024px)_and_(max-height:760px)]:pt-2">
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div
                     className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
@@ -733,10 +733,10 @@ export default function Home() {
             </div>
           </aside>
 
-          {/* Right: takes remaining height; table body scrolls inside */}
-          <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
-              {/* Shared horizontal inset: padding on wrapper, scroll uses inner only so scrollbar does not steal width vs project */}
+          {/* Right: fills remaining height; panel scrolls vertically if content is taller than viewport; wide table scrolls inside */}
+          <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:thin] lg:min-h-0">
+            <div className="flex h-auto min-h-full w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
+              {/* Shared horizontal inset: padding on wrapper */}
               <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-6 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:pb-3 [@media(min-width:1024px)_and_(max-height:760px)]:pt-3">
                 <div className="relative mb-6 shrink-0 w-full [@media(min-width:1024px)_and_(max-height:760px)]:mb-3" style={{ zIndex: 100 }}>
                   <label className={`mb-1 block text-sm font-medium ${isProjectDisabled ? "text-gray-400 dark:text-gray-500" : "text-slate-700 dark:text-slate-300"}`}>
@@ -754,8 +754,10 @@ export default function Home() {
                 </div>
 
                 <div
-                  className={`flex min-h-0 w-full flex-1 flex-col overflow-x-hidden overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
-                    activeTab === "records" ? "overflow-hidden" : "overflow-y-auto"
+                  className={`flex min-h-0 w-full flex-1 flex-col overflow-x-hidden overscroll-contain ${
+                    activeTab === "records"
+                      ? "overflow-hidden"
+                      : "overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                   }`}
                 >
         {/* Stage 1: Upload Tab */}
@@ -922,10 +924,7 @@ export default function Home() {
               <>
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-0 bg-[#FAFAFA] dark:bg-slate-800">
                   <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-[#F7F7F7]/30 dark:border-slate-700 dark:bg-slate-800/50">
-                    <div
-                      className="min-h-0 flex-1 overflow-auto rounded-b-xl [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[max(13rem,38dvh)]"
-                      style={{ minHeight: "max(14rem, min(42dvh, 50vh))" }}
-                    >
+                    <div className="min-h-[21rem] flex-1 basis-0 overflow-x-auto overflow-y-auto rounded-b-xl [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[max(19rem,32dvh)]">
                       <table className="w-max min-w-full border-separate border-spacing-0 text-sm [@media(min-width:1024px)_and_(max-height:760px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:760px)]:[&_tbody_td]:!p-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!px-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!py-1">
                         <thead>
                           <tr className="text-xs font-bold uppercase leading-none tracking-wider text-slate-800 dark:text-slate-300">
