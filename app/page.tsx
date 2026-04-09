@@ -282,7 +282,7 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState("तारापूर अणुऊर्जा प्रकल्प ३ & ४");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchColumns, setSearchColumns] = useState<string[]>(availableColumns);
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
   const [pdfMappings, setPdfMappings] = useState<PDFMapping[]>([]);
@@ -627,17 +627,17 @@ export default function Home() {
 
   return (
     <div
-      className={`flex min-h-0 flex-col overflow-hidden transition-colors duration-300 h-[calc(100dvh-7.5rem)] ${darkMode ? "dark bg-slate-900" : "bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50"}`}
+      className={`flex min-h-0 flex-col overflow-hidden transition-colors duration-300 h-[calc(100dvh-6.5rem)] max-h-[calc(100dvh-6.5rem)] ${darkMode ? "dark bg-slate-900" : "bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50"}`}
     >
-      <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-4 py-4">
-        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden lg:flex-row lg:items-stretch">
-          {/* Left: stepper — fills column; no page scroll */}
-          <aside className="flex w-full shrink-0 flex-col self-stretch min-h-0 lg:w-[20%] lg:min-w-[11rem] lg:max-w-[15rem]">
-            <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-800 lg:min-h-0 lg:flex-1">
-              <p className="mb-4 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-4 py-2 sm:py-3 lg:py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:items-stretch lg:gap-6">
+          {/* Left: stepper — scrolls inside when vertical space is tight */}
+          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink overflow-hidden self-stretch lg:max-h-none lg:w-[20%] lg:min-w-[10rem] lg:max-w-[14rem] lg:shrink-0">
+            <div className="flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-5 lg:min-h-0 lg:flex-1">
+              <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-4">
                 Progress
               </p>
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pr-0.5 [scrollbar-width:thin]">
                 {steps.map((step, index) => {
                   const isActive = activeTab === step.key;
                   const isCompleted = isStepCompleted(step.key);
@@ -653,7 +653,7 @@ export default function Home() {
                         aria-current={isActive ? "step" : undefined}
                         disabled={disabled}
                         onClick={() => goToStep(step.key)}
-                        className={`group flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 ${
+                        className={`group flex w-full items-center gap-2 rounded-xl p-2 text-left transition-all duration-200 sm:gap-3 sm:p-3 ${
                           isActive
                             ? "border-2 border-[#09b556] bg-emerald-50/70 shadow-md shadow-emerald-900/5 ring-2 ring-[#09b556]/25 dark:border-emerald-500 dark:bg-emerald-950/35 dark:ring-emerald-500/30"
                             : "border-2 border-transparent bg-slate-50/50 dark:bg-slate-700/30"
@@ -664,7 +664,7 @@ export default function Home() {
                         } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                       >
                         <span
-                          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border transition-colors ${
+                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors sm:h-12 sm:w-12 lg:h-14 lg:w-14 ${
                             isActive
                               ? "border-emerald-200 bg-white text-[#09b556] shadow-sm dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-400"
                               : isCompleted
@@ -673,9 +673,9 @@ export default function Home() {
                           }`}
                         >
                           {isCompleted ? (
-                            <Check className="h-7 w-7 stroke-[2.5]" aria-hidden />
+                            <Check className="h-5 w-5 stroke-[2.5] sm:h-6 sm:w-6 lg:h-7 lg:w-7" aria-hidden />
                           ) : (
-                            <StepIcon className="h-7 w-7" strokeWidth={1.75} aria-hidden />
+                            <StepIcon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" strokeWidth={1.75} aria-hidden />
                           )}
                         </span>
                         <span className="min-w-0 flex-1">
@@ -699,11 +699,11 @@ export default function Home() {
                       </button>
                       {index < steps.length - 1 && (
                         <div
-                          className="flex justify-start py-5 pl-10"
+                          className="flex justify-start py-2 pl-7 sm:py-3 sm:pl-9 lg:py-5 lg:pl-10"
                           aria-hidden
                         >
                           <div
-                            className={`w-0.5 min-h-[52px] shrink-0 rounded-full ${
+                            className={`w-0.5 min-h-[28px] shrink-0 rounded-full sm:min-h-[40px] lg:min-h-[52px] ${
                               isCompleted
                                 ? "bg-gradient-to-b from-emerald-400 to-emerald-600"
                                 : "bg-slate-200 dark:bg-slate-600"
@@ -731,8 +731,8 @@ export default function Home() {
             </div>
           </aside>
 
-          {/* Right: project row fixed; only inner stage area scrolls */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          {/* Right: takes remaining height; table body scrolls inside */}
+          <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
               {/* Shared horizontal inset: padding on wrapper, scroll uses inner only so scrollbar does not steal width vs project */}
               <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-6">
@@ -920,7 +920,10 @@ export default function Home() {
               <>
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-0 bg-[#FAFAFA] dark:bg-slate-800">
                   <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-[#F7F7F7]/30 dark:border-slate-700 dark:bg-slate-800/50">
-                    <div className="min-h-0 flex-1 overflow-auto rounded-b-xl">
+                    <div
+                      className="min-h-0 flex-1 overflow-auto rounded-b-xl"
+                      style={{ minHeight: "max(12.5rem, 28dvh)" }}
+                    >
                       <table className="w-max min-w-full border-separate border-spacing-0 text-sm">
                         <thead>
                           <tr className="text-xs font-bold uppercase leading-none tracking-wider text-slate-800 dark:text-slate-300">
