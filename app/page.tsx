@@ -637,7 +637,7 @@ export default function Home() {
               <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-4 [@media(min-width:1024px)_and_(max-height:760px)]:mb-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:mb-1.5">
                 Progress
               </p>
-              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pr-0.5 [scrollbar-width:thin]">
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-3 pr-0.5 [scrollbar-width:thin]">
                 {steps.map((step, index) => {
                   const isActive = activeTab === step.key;
                   const isCompleted = isStepCompleted(step.key);
@@ -715,18 +715,20 @@ export default function Home() {
                   );
                 })}
               </div>
-              <div className="mt-auto shrink-0 h-1.5 rounded-full bg-slate-200 pt-4 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:pt-2">
-                <div
-                  className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
-                  style={{
-                    width:
-                      activeTab === "upload"
-                        ? "33%"
-                        : activeTab === "records"
-                          ? "66%"
-                          : "100%",
-                  }}
-                />
+              <div className="mt-auto shrink-0 border-t border-slate-100 pt-3 dark:border-slate-600 [@media(min-width:1024px)_and_(max-height:760px)]:pt-2">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
+                    style={{
+                      width:
+                        activeTab === "upload"
+                          ? "33%"
+                          : activeTab === "records"
+                            ? "66%"
+                            : "100%",
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </aside>
@@ -922,7 +924,7 @@ export default function Home() {
                   <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-[#F7F7F7]/30 dark:border-slate-700 dark:bg-slate-800/50">
                     <div
                       className="min-h-0 flex-1 overflow-auto rounded-b-xl [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[max(13rem,38dvh)]"
-                      style={{ minHeight: "max(12rem, 26dvh)" }}
+                      style={{ minHeight: "max(14rem, min(42dvh, 50vh))" }}
                     >
                       <table className="w-max min-w-full border-separate border-spacing-0 text-sm [@media(min-width:1024px)_and_(max-height:760px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:760px)]:[&_tbody_td]:!p-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!px-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!py-1">
                         <thead>
@@ -991,7 +993,7 @@ export default function Home() {
                         </thead>
                         <tbody>
                           {paginatedData.map((record) => (
-                            <tr key={record.id} className="group bg-[#FAFAFA] transition-colors duration-200 dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/50">
+                            <tr key={record.id} className="group bg-[#FAFAFA] transition-colors duration-200 dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/50 [&_td]:align-top">
                               <td className="sticky left-0 z-20 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-[#FAFAFA] p-4 text-center font-medium text-slate-700 group-hover:bg-indigo-50/60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700/80">
                                 {record.serialNo}
                               </td>
@@ -1008,7 +1010,9 @@ export default function Home() {
                               </td>
                               <td className="border-b border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.refNo || "-"}</td>
                               <td className="border-b border-slate-100 p-4 dark:border-slate-700">
-                                <div className="max-w-[300px] whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300 [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[200px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[220px]">{record.subject}</div>
+                                <div className="max-h-24 max-w-[300px] overflow-y-auto whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[200px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[220px]">
+                                  {record.subject}
+                                </div>
                               </td>
                               <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.notePages}</td>
                               <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.correspondencePages}</td>
@@ -1025,7 +1029,9 @@ export default function Home() {
                               <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.senderSignature || "-"}</td>
                               <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.receiverSignature || "-"}</td>
                               <td className="border-b border-slate-100 p-4 dark:border-slate-700">
-                                <div className="max-w-[250px] whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400 [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[180px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[200px]">{record.remarks}</div>
+                                <div className="max-h-20 max-w-[250px] overflow-y-auto whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[180px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[200px]">
+                                  {record.remarks}
+                                </div>
                               </td>
                               <td className="border-b border-slate-100 p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">{record.pageRange}</td>
                             </tr>
