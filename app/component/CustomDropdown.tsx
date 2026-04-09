@@ -85,7 +85,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         </button>
 
         {isOpen && (
-          <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white border border-[#e4e4e4] rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.08)] z-[100] overflow-hidden">
+          <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white border border-[#e4e4e4] rounded-xl shadow-[0px_8px_24px_rgba(0,0,0,0.08)] z-[200] overflow-hidden">
             {showSearch && (
               <div className="p-2 border-b border-[#f0f0f0]">
                 <div className="relative">

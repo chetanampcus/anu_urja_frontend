@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
-import { Search, Filter, ChevronDown, Eye, FileText, ChevronLeft, ChevronRight, Check } from "lucide-react"
+import Image from "next/image"
+import { Search, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { Button } from "../component/button"
 import {
   DropdownMenu,
@@ -10,20 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../component/dropdown-menu"
-import { Card, CardContent } from "../component/card"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../component/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "../component/command"
 import CustomDropdown from "../component/CustomDropdown"
 
 // Replaced SearchableFilter with CustomDropdown
@@ -245,10 +231,6 @@ export default function DashboardPage() {
   const availableColumns = ["Subject", "File No", "Remarks", "Shelf No"]
   const [searchColumns, setSearchColumns] = useState<string[]>(availableColumns)
   const [department, setDepartment] = useState("");
-  const options = ["1", "2", "3", "4"].map((item) => ({
-    label: item,
-    value: item,
-  }));
 
   const toggleColumn = (col: string) => {
     setSearchColumns(prev =>
@@ -295,42 +277,49 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50">
-      <main className="max-w-[1600px] mx-auto px-4 py-6">
-        
-        {/* Project Dropdown */}
-        <div className="mb-6 relative" style={{ zIndex: 100 }}>
-          <label className="block text-sm font-medium mb-1 text-slate-700">
+    <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+      <section
+        className="sticky top-24 z-[900] -mt-6 h-14 w-full shrink-0 overflow-hidden bg-slate-900 shadow-[0_6px_16px_-4px_rgba(30,58,138,0.22)] sm:h-16"
+        aria-label="Page title banner"
+      >
+        <Image
+          src="/gov.png"
+          alt=""
+          fill
+          priority
+          className="object-cover object-[50%_35%]"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/82 via-indigo-900/72 to-slate-800/78" aria-hidden />
+        <div className="relative z-10 mx-auto flex h-full max-w-[1600px] items-center justify-center px-3 text-center sm:px-4">
+          <div className="max-w-4xl space-y-0 leading-tight drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">
+            <h1 className="text-[13px] font-bold text-white sm:text-sm md:text-[0.9375rem]">{TEXT.title}</h1>
+            <p className="text-[11px] font-medium text-white/90 sm:text-xs">{TEXT.branch}</p>
+            <p className="text-[11px] font-semibold text-indigo-100 sm:text-xs">{TEXT.projectName}</p>
+          </div>
+        </div>
+      </section>
+
+      <main className="relative z-[16] mx-auto max-w-[1600px] px-3 py-12 sm:px-4">
+        <div className="mb-6" style={{ zIndex: 100 }}>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Select Project / प्रकल्प निवडा:
           </label>
           <CustomDropdown
             placeholder="Select Project"
-            options={availableProjects.map(p => ({ label: p, value: p }))}
+            options={availableProjects.map((p) => ({ label: p, value: p }))}
             value={selectedProject}
             onChange={setSelectedProject}
-            className="w-[350px]"
+            className="w-full max-w-[350px]"
           />
         </div>
 
-        {/* Title Card */}
-        <Card className="mb-6 border border-slate-200/50 bg-gradient-to-r from-[#F0F0F0] to-slate-200 text-slate-800 shadow-md shadow-slate-100/40">
-          <CardContent className="py-3">
-            <div className="text-center">
-              <h2 className="text-xl font-bold mb-1">{TEXT.title}</h2>
-              <p className="text-slate-700/80 text-sm font-medium leading-tight mb-0.5">{TEXT.branch}</p>
-              <p className="text-slate-700/80 text-sm font-medium leading-tight">{TEXT.projectName}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6 border-0 shadow-xl bg-[#FAFAFA]">
-          <CardContent className="p-0">
-            {/* Search + Filter Wrapper */}
-            <div className="flex items-center gap-4 flex-wrap md:flex-nowrap p-4 w-full">
-
-              {/* Search */}
-              <span className="text-sm font-medium text-slate-600 shrink-0">Search:</span>
-              <div className="flex flex-1 w-full shrink h-10 rounded-lg border border-slate-200 bg-[#F7F7F7] focus-within:bg-[#FAFAFA] focus-within:ring-2 focus-within:ring-slate-300 overflow-visible transition-colors relative">
+        <div className="relative z-[60] mb-6 rounded-xl border border-slate-200/90 bg-white/90 shadow-sm backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/80">
+          <div className="flex w-full flex-wrap items-center gap-4 p-4 lg:flex-nowrap">
+              {/* Search ~20% narrower than an even split; filters use the rest */}
+              <div className="flex min-h-10 w-full min-w-0 items-center gap-2 sm:gap-3 lg:w-[40%] lg:max-w-[40%] lg:shrink-0">
+              <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Search:</span>
+              <div className="flex h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-[#F7F7F7] transition-colors focus-within:bg-[#FAFAFA] focus-within:ring-2 focus-within:ring-slate-300 dark:border-slate-600 dark:bg-slate-900/40 dark:focus-within:bg-slate-900/60 dark:focus-within:ring-slate-500 relative overflow-visible">
                 <div className="relative flex-1 h-full min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
@@ -367,10 +356,10 @@ export default function DashboardPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+              </div>
 
-              {/* Filters */}
-              <div className="flex items-center gap-3 shrink-0 text-left text-[14px]">
-                <span className="text-sm font-medium text-slate-600">Filters:</span>
+              <div className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-3 text-left text-[14px] lg:w-0 lg:min-w-0">
+                <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">Filters:</span>
 
                 <CustomDropdown
                   placeholder="Select a Shelf No"
@@ -383,6 +372,7 @@ export default function DashboardPage() {
                   value={department}
                   onChange={(val) => setDepartment(val)}
                   showSearch={true}
+                  className="min-w-[140px] flex-1 sm:max-w-[220px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                 />
 
                 {/* Set Priority */}
@@ -391,10 +381,9 @@ export default function DashboardPage() {
                   options={Array.from({ length: 4 }).map((_, i) => ({ label: `${i + 1}`, value: `${i + 1}` }))}
                   value=""
                   onChange={() => {}}
-                  className="w-[150px]"
+                  className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                 />
 
-                {/* Set Priority */}
                 <CustomDropdown
                   placeholder="Select Priority"
                   options={[
@@ -404,218 +393,197 @@ export default function DashboardPage() {
                   ]}
                   value=""
                   onChange={() => {}}
-                  className="w-[150px]"
+                  className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                 />
 
               </div>
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
-        {/* Table Card */}
-        <Card className="border-0 shadow-xl bg-[#FAFAFA]">
-          <CardContent className="p-0">
-
-            {/* Table Section */}
-            <div className="mt-4 border-t border-slate-100 bg-[#F7F7F7]/30">
-
-              {/* SCROLL AREA */}
-              <div className="max-h-[600px] overflow-auto relative custom-scrollbar rounded-b-xl">
-                <table className="w-full border-collapse text-sm">
-
-                  {/* HEADER */}
-                  <thead className="sticky top-0 z-[100] bg-gradient-to-r from-blue-50/95 to-indigo-50/95 backdrop-blur-md shadow-sm border-b border-indigo-100 will-change-transform translate-y-[-1px]">
-                    {/* ROW 1 */}
-                    <tr className="text-slate-800 font-bold text-xs uppercase tracking-wider">
-                      <th className="p-4 align-middle whitespace-nowrap text-center">अ.क्र</th>
-                      <th className="p-4 align-middle whitespace-nowrap text-center">शेल्फ क्र.</th>
-                      <th className="p-4 align-middle whitespace-nowrap text-center">गट्टा क्र.</th>
-                      <th className="p-4 align-middle whitespace-nowrap text-center">नस्ती क्रमांक</th>
-                      <th className="p-4 align-middle whitespace-nowrap text-center">संदर्भ क्र.</th>
-                      <th className="p-4 align-middle min-w-[280px] text-left">विषय</th>
-
-                      <th colSpan={2} className="p-4 align-middle text-center border-x border-indigo-100/50 bg-indigo-100/30">
-                        नस्ती बंद करताना त्यामागील पृष्ठ
-                      </th>
-
-                      <th className="p-4 align-middle whitespace-nowrap text-center">माहितीचे वर्गीकरण</th>
-                      <th className="p-4 align-middle whitespace-nowrap text-center">नस्ती नष्ट करण्याचा दिनांक</th>
-
-                      <th colSpan={2} className="p-4 align-middle text-center border-x border-indigo-100/50 bg-indigo-100/30">
-                        व्यक्तीची सही
-                      </th>
-
-                      <th className="p-4 align-middle min-w-[200px] text-left">शेरा</th>
-                      <th className="p-4 align-middle whitespace-nowrap text-center">पृष्ठ क्र.</th>
-                      <th className="p-4 align-middle whitespace-nowrap text-center">View</th>
+        <div className="relative z-0 flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-white dark:border-slate-700 dark:bg-slate-800/50">
+            <div className="max-h-[min(600px,70dvh)] flex-1 overflow-x-auto overflow-y-auto [scrollbar-width:thin]">
+              <table className="records-table w-max min-w-full border-separate border-spacing-0 bg-slate-200 text-sm dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:760px)]:[&_tbody_td]:!p-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!px-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!py-2">
+                <thead className="sticky top-0 z-[12] bg-slate-200 dark:bg-slate-700">
+                  <tr className="text-[0.8125rem] font-bold uppercase leading-none tracking-wide text-slate-900 sm:text-sm dark:text-slate-100">
+                    <th className="sticky left-0 top-auto z-[18] box-border min-h-[3.5rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b-0 border-l border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      अ.क्र
+                    </th>
+                    <th className="sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      शेल्फ क्र.
+                    </th>
+                    <th className="sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3.5rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-b-0 border-r border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      गट्टा क्र.
+                    </th>
+                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      नस्ती क्रमांक
+                    </th>
+                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      संचिका क्र.
+                    </th>
+                    <th className="min-h-[3.5rem] min-w-[280px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]">
+                      विषय
+                    </th>
+                    <th colSpan={2} className="min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600">
+                      नस्ती बंद करताना त्यामधील पृष्ठ
+                    </th>
+                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      माहितीचे वर्गीकरण
+                    </th>
+                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      नस्ती नष्ट करण्याचा दिनांक
+                    </th>
+                    <th colSpan={2} className="min-h-[3.5rem] border-b-0 border-x border-slate-300 bg-slate-300 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-600">
+                      व्यक्तीची सही
+                    </th>
+                    <th className="min-h-[3.5rem] min-w-[200px] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-left align-middle dark:border-slate-500 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]">
+                      शेरा
+                    </th>
+                    <th className="min-h-[3.5rem] border-b-0 border-slate-300 bg-slate-200 py-3.5 px-3 text-center align-middle whitespace-nowrap dark:border-slate-500 dark:bg-slate-700">
+                      पृष्ठ क्र.
+                    </th>
+                  </tr>
+                  <tr className="text-xs font-bold uppercase leading-none tracking-wide text-slate-800 sm:text-[0.8125rem] dark:text-slate-200">
+                    <th className="sticky left-0 top-auto z-[18] box-border min-h-[3rem] min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-t border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="sticky left-[4.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="sticky left-[9.5rem] top-auto z-[18] box-border min-h-[3rem] min-w-[5rem] w-[5rem] max-w-[5rem] border-t border-b border-r border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
+                      टिपणी भाग
+                    </th>
+                    <th className="min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
+                      पत्रव्यवहार भाग
+                    </th>
+                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="min-h-[3rem] border-t border-b border-l border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
+                      पाठविणा-या
+                    </th>
+                    <th className="min-h-[3rem] border-t border-b border-r border-slate-300 bg-slate-400 py-3 px-3 text-center dark:border-slate-500 dark:bg-slate-500">
+                      स्वीकारणा-याची
+                    </th>
+                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                    <th className="min-h-[3rem] border-t border-b border-slate-300 bg-slate-300 py-3 px-3 dark:border-slate-500 dark:bg-slate-600" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedData.map((record) => (
+                    <tr key={record.id} className="group bg-white transition-colors duration-200 dark:bg-slate-800 [&_td]:align-top">
+                      <td className="sticky left-0 z-[10] box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-l border-r border-slate-200 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        {record.serialNo}
+                      </td>
+                      <td className="sticky left-[4.5rem] z-[10] box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        {record.shelfNo || "-"}
+                      </td>
+                      <td className="sticky left-[9.5rem] z-[10] box-border min-w-[5rem] w-[5rem] max-w-[5rem] border-b border-r border-slate-200 bg-white p-4 text-center text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        {record.bundleNo || "-"}
+                      </td>
+                      <td className="border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800">
+                        <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-[#F0F0F0] px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                          {record.refNo || "-"}
+                        </span>
+                      </td>
+                      <td className="border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                        {record.fileNo || "-"}
+                      </td>
+                      <td className="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="max-h-24 max-w-[300px] overflow-y-auto whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[200px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[220px]">
+                          {record.subject}
+                        </div>
+                      </td>
+                      <td className="border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.notePages}</td>
+                      <td className="border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.correspondencePages}</td>
+                      <td className="border-b border-slate-100 bg-white p-4 text-center dark:border-slate-700 dark:bg-slate-800">
+                        <span
+                          className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${record.classification === "अ" ? "border border-amber-200 bg-amber-100 text-amber-700" : record.classification === "ब" ? "border border-blue-200 bg-blue-100 text-slate-600" : "border border-slate-200 bg-[#F0F0F0] text-slate-700"}`}
+                        >
+                          {record.classification}
+                        </span>
+                      </td>
+                      <td className="border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                        {record.destructionDate === "कायम" ? (
+                          <span className="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">{record.destructionDate}</span>
+                        ) : (
+                          record.destructionDate
+                        )}
+                      </td>
+                      <td className="border-b border-l border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.senderSignature || "-"}</td>
+                      <td className="border-b border-r border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{record.receiverSignature || "-"}</td>
+                      <td className="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="max-h-20 max-w-[250px] overflow-y-auto whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400 [scrollbar-width:thin] [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[180px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[200px]">
+                          {record.remarks}
+                        </div>
+                      </td>
+                      <td className="border-b border-slate-100 bg-white p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">{record.pageRange}</td>
                     </tr>
-
-                    {/* ROW 2 */}
-                    <tr className="text-slate-700 text-[11px] uppercase tracking-wider bg-[#F0F0F0]/20 border-t border-slate-200/60">
-                      {Array(6).fill(0).map((_, i) => (
-                        <th key={i} className="p-2"></th>
-                      ))}
-
-                      <th className="p-2 text-center border-l bg-indigo-100/30 border-indigo-100/50">टिप्पणी भाग</th>
-                      <th className="p-2 text-center border-r bg-indigo-100/30 border-indigo-100/50">पत्रव्यवहार भाग</th>
-
-                      <th className="p-2"></th>
-                      <th className="p-2"></th>
-
-                      <th className="p-2 text-center border-l bg-indigo-100/30 border-indigo-100/50">पाठविणा-या</th>
-                      <th className="p-2 text-center border-r bg-indigo-100/30 border-indigo-100/50">स्वीकारणा-याची</th>
-
-                      <th className="p-2"></th>
-                      <th className="p-2"></th>
-                      <th className="p-2"></th>
-                    </tr>
-                  </thead>
-
-                  {/* BODY */}
-                  <tbody className="divide-y divide-slate-100">
-                    {paginatedData.map((record) => (
-                      <tr
-                        key={record.id}
-                        className="group bg-[#FAFAFA] hover:bg-indigo-50/40 transition-colors duration-200"
-                      >
-                        <td className="p-4 text-center font-medium text-slate-700">{record.serialNo}</td>
-                        <td className="p-4 text-center text-slate-600">{record.shelfNo || '-'}</td>
-                        <td className="p-4 text-center text-slate-600">{record.bundleNo || '-'}</td>
-                        <td className="p-4 text-center">
-                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-[#F0F0F0] text-slate-700 text-xs font-medium border border-slate-200">
-                            {record.fileNo || '-'}
-                          </span>
-                        </td>
-                        <td className="p-4 text-center text-slate-600">{record.refNo || '-'}</td>
-
-                        <td className="p-4">
-                          <div className="whitespace-pre-line break-words max-w-[300px] text-slate-700 leading-relaxed font-medium">
-                            {record.subject}
-                          </div>
-                        </td>
-
-                        <td className="p-4 text-center text-slate-600 border-l border-slate-50 group-hover:border-indigo-50/50">{record.notePages}</td>
-                        <td className="p-4 text-center text-slate-600 border-r border-slate-50 group-hover:border-indigo-50/50">{record.correspondencePages}</td>
-
-                        <td className="p-4 text-center">
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${record.classification === 'अ' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                            record.classification === 'ब' ? 'bg-blue-100 text-slate-600 border border-blue-200' :
-                              'bg-[#F0F0F0] text-slate-700 border border-slate-200'
-                            }`}>
-                            {record.classification}
-                          </span>
-                        </td>
-                        <td className="p-4 text-center text-slate-600">
-                          {record.destructionDate === 'कायम' ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
-                              {record.destructionDate}
-                            </span>
-                          ) : (
-                            record.destructionDate
-                          )}
-                        </td>
-
-                        <td className="p-4 text-center text-slate-600 border-l border-slate-50 group-hover:border-indigo-50/50">{record.senderSignature || '-'}</td>
-                        <td className="p-4 text-center text-slate-600 border-r border-slate-50 group-hover:border-indigo-50/50">{record.receiverSignature || '-'}</td>
-
-                        <td className="p-4">
-                          <div className="whitespace-pre-line break-words max-w-[250px] text-slate-500 text-xs leading-relaxed">
-                            {record.remarks}
-                          </div>
-                        </td>
-
-                        <td className="p-4 text-center font-medium text-slate-700">{record.pageRange}</td>
-
-                        <td className="p-4 text-center">
-                          <button className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#FAFAFA] border border-slate-200 text-slate-600 shadow-sm hover:bg-[#F7F7F7] hover:border-slate-300 hover:text-slate-800 transition-all font-medium text-sm group/btn">
-                            <Eye className="w-4 h-4 mr-1.5 text-slate-400 group-hover/btn:text-slate-600 transition-colors" />
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
-          </CardContent>
-
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] border-t border-slate-200">
-            <div className="flex items-center gap-4">
-              <p className="text-sm text-slate-600">
-                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-                <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span> of{" "}
-                <span className="font-medium">{filteredData.length}</span>
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-600">Items per page:</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-20 justify-between border-slate-300 bg-[#FAFAFA]"
-                    >
-                      {itemsPerPage}
-                      <ChevronDown className="h-4 w-4 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-20 z-[999] bg-[#FAFAFA] border border-slate-200 shadow-md rounded-md">
+            <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] px-6 py-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-800 sm:flex-row [@media(min-width:1024px)_and_(max-height:760px)]:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:py-2.5">
+              <div className="flex flex-wrap items-center gap-4">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                  <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span> of{" "}
+                  <span className="font-medium">{filteredData.length}</span>
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    className="w-20 rounded-md border border-slate-300 bg-[#FAFAFA] px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  >
                     {[5, 10, 20, 50].map((value) => (
-                      <DropdownMenuItem
-                        key={value}
-                        onClick={() => handleItemsPerPageChange(value)}
-                        className={itemsPerPage === value ? "bg-indigo-50 text-slate-600" : ""}
-                      >
+                      <option key={value} value={value}>
                         {value}
-                      </DropdownMenuItem>
+                      </option>
                     ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </select>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="border-slate-300"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Prev
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <div className="flex items-center gap-2">
                 <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
+                  variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(page)}
-                  className={
-                    currentPage === page
-                      ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md"
-                      : "border-slate-300"
-                  }
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="border-slate-300 dark:border-slate-600"
                 >
-                  {page}
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
                 </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="border-slate-300"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className={
+                      currentPage === page
+                        ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md"
+                        : "border-slate-300 dark:border-slate-600"
+                    }
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="border-slate-300 dark:border-slate-600"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
       </main>
     </div>
   )
