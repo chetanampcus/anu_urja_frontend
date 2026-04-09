@@ -629,12 +629,12 @@ export default function Home() {
     <div
       className={`flex min-h-0 flex-col overflow-hidden transition-colors duration-300 h-[calc(100dvh-6.5rem)] max-h-[calc(100dvh-6.5rem)] ${darkMode ? "dark bg-slate-900" : "bg-gradient-to-br from-[#F7F7F7] via-blue-50 to-indigo-50"}`}
     >
-      <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-4 py-2 sm:py-3 lg:py-4">
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:items-stretch lg:gap-6">
-          {/* Left: stepper — scrolls inside when vertical space is tight */}
-          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink overflow-hidden self-stretch lg:max-h-none lg:w-[20%] lg:min-w-[10rem] lg:max-w-[14rem] lg:shrink-0">
-            <div className="flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-5 lg:min-h-0 lg:flex-1">
-              <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-4">
+      <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-3 py-2 sm:px-4 sm:py-3 lg:py-4 [@media(min-width:1024px)_and_(max-height:760px)]:px-3 [@media(min-width:1024px)_and_(max-height:760px)]:py-1.5">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:items-stretch lg:gap-6 [@media(min-width:1024px)_and_(max-height:760px)]:lg:gap-4">
+          {/* Left: stepper — scrolls inside when vertical space is tight; compact on ~1366×737 laptops */}
+          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink overflow-hidden self-stretch lg:max-h-none lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-[16%] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-w-[8.5rem] [@media(min-width:1024px)_and_(max-height:760px)]:lg:max-w-[11rem]">
+            <div className="flex h-full min-h-0 w-full max-h-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-5 lg:min-h-0 lg:flex-1 [@media(min-width:1024px)_and_(max-height:760px)]:p-2.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2.5">
+              <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-4 [@media(min-width:1024px)_and_(max-height:760px)]:mb-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:mb-1.5">
                 Progress
               </p>
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pr-0.5 [scrollbar-width:thin]">
@@ -653,7 +653,7 @@ export default function Home() {
                         aria-current={isActive ? "step" : undefined}
                         disabled={disabled}
                         onClick={() => goToStep(step.key)}
-                        className={`group flex w-full items-center gap-2 rounded-xl p-2 text-left transition-all duration-200 sm:gap-3 sm:p-3 ${
+                        className={`group flex w-full items-center gap-2 rounded-xl p-2 text-left transition-all duration-200 sm:gap-3 sm:p-3 [@media(min-width:1024px)_and_(max-height:760px)]:gap-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:p-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2 ${
                           isActive
                             ? "border-2 border-[#09b556] bg-emerald-50/70 shadow-md shadow-emerald-900/5 ring-2 ring-[#09b556]/25 dark:border-emerald-500 dark:bg-emerald-950/35 dark:ring-emerald-500/30"
                             : "border-2 border-transparent bg-slate-50/50 dark:bg-slate-700/30"
@@ -664,7 +664,7 @@ export default function Home() {
                         } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                       >
                         <span
-                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors sm:h-12 sm:w-12 lg:h-14 lg:w-14 ${
+                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors sm:h-12 sm:w-12 lg:h-14 lg:w-14 [@media(min-width:1024px)_and_(max-height:760px)]:h-9 [@media(min-width:1024px)_and_(max-height:760px)]:w-9 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-9 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-9 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-10 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-10 ${
                             isActive
                               ? "border-emerald-200 bg-white text-[#09b556] shadow-sm dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-400"
                               : isCompleted
@@ -673,9 +673,9 @@ export default function Home() {
                           }`}
                         >
                           {isCompleted ? (
-                            <Check className="h-5 w-5 stroke-[2.5] sm:h-6 sm:w-6 lg:h-7 lg:w-7" aria-hidden />
+                            <Check className="h-5 w-5 stroke-[2.5] sm:h-6 sm:w-6 lg:h-7 lg:w-7 [@media(min-width:1024px)_and_(max-height:760px)]:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-5" aria-hidden />
                           ) : (
-                            <StepIcon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" strokeWidth={1.75} aria-hidden />
+                            <StepIcon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 [@media(min-width:1024px)_and_(max-height:760px)]:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:h-4 [@media(min-width:1024px)_and_(max-height:760px)]:sm:w-4 [@media(min-width:1024px)_and_(max-height:760px)]:lg:h-5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-5" strokeWidth={1.75} aria-hidden />
                           )}
                         </span>
                         <span className="min-w-0 flex-1">
@@ -690,7 +690,7 @@ export default function Home() {
                           >
                             {step.label}
                           </span>
-                          <span className="mt-0.5 block text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                          <span className="mt-0.5 block text-[11px] font-medium leading-snug text-slate-400 dark:text-slate-500 [@media(min-width:1024px)_and_(max-height:760px)]:mt-0 [@media(min-width:1024px)_and_(max-height:760px)]:text-[10px]">
                             {step.key === "upload" && "Spreadsheet upload"}
                             {step.key === "records" && "Review extracted rows"}
                             {step.key === "mapping" && "Link PDF documents"}
@@ -699,11 +699,11 @@ export default function Home() {
                       </button>
                       {index < steps.length - 1 && (
                         <div
-                          className="flex justify-start py-2 pl-7 sm:py-3 sm:pl-9 lg:py-5 lg:pl-10"
+                          className="flex justify-start py-2 pl-7 sm:py-3 sm:pl-9 lg:py-5 lg:pl-10 [@media(min-width:1024px)_and_(max-height:760px)]:py-1 [@media(min-width:1024px)_and_(max-height:760px)]:pl-5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:py-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:pl-6 [@media(min-width:1024px)_and_(max-height:760px)]:lg:py-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:lg:pl-7"
                           aria-hidden
                         >
                           <div
-                            className={`w-0.5 min-h-[28px] shrink-0 rounded-full sm:min-h-[40px] lg:min-h-[52px] ${
+                            className={`w-0.5 min-h-[28px] shrink-0 rounded-full sm:min-h-[40px] lg:min-h-[52px] [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[18px] [@media(min-width:1024px)_and_(max-height:760px)]:sm:min-h-[20px] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-h-[24px] ${
                               isCompleted
                                 ? "bg-gradient-to-b from-emerald-400 to-emerald-600"
                                 : "bg-slate-200 dark:bg-slate-600"
@@ -715,7 +715,7 @@ export default function Home() {
                   );
                 })}
               </div>
-              <div className="mt-auto pt-4 shrink-0 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div className="mt-auto shrink-0 h-1.5 rounded-full bg-slate-200 pt-4 dark:bg-slate-700 [@media(min-width:1024px)_and_(max-height:760px)]:pt-2">
                 <div
                   className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
                   style={{
@@ -735,8 +735,8 @@ export default function Home() {
           <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
               {/* Shared horizontal inset: padding on wrapper, scroll uses inner only so scrollbar does not steal width vs project */}
-              <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-6">
-                <div className="relative mb-6 shrink-0 w-full" style={{ zIndex: 100 }}>
+              <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-6 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:pb-3 [@media(min-width:1024px)_and_(max-height:760px)]:pt-3">
+                <div className="relative mb-6 shrink-0 w-full [@media(min-width:1024px)_and_(max-height:760px)]:mb-3" style={{ zIndex: 100 }}>
                   <label className={`mb-1 block text-sm font-medium ${isProjectDisabled ? "text-gray-400 dark:text-gray-500" : "text-slate-700 dark:text-slate-300"}`}>
                     Select Project / प्रकल्प निवडा:
                     {isProjectDisabled && <span className="ml-2 text-xs text-gray-400">(Project locked after extraction)</span>}
@@ -910,7 +910,7 @@ export default function Home() {
         {activeTab === 'records' && (
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {allRecords.length > 0 && (
-              <div className="sticky top-0 z-[70] mb-3 shrink-0 border-b border-slate-200/80 bg-transparent py-1.5 text-left dark:border-slate-600">
+              <div className="sticky top-0 z-[70] mb-3 shrink-0 border-b border-slate-200/80 bg-transparent py-1.5 text-left dark:border-slate-600 [@media(min-width:1024px)_and_(max-height:760px)]:mb-2 [@media(min-width:1024px)_and_(max-height:760px)]:py-1">
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                   Total Records: {allRecords.length} from {sheetsList.length} sheets
                 </p>
@@ -921,10 +921,10 @@ export default function Home() {
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border-0 bg-[#FAFAFA] dark:bg-slate-800">
                   <div className="flex min-h-0 flex-1 flex-col border-t border-slate-100 bg-[#F7F7F7]/30 dark:border-slate-700 dark:bg-slate-800/50">
                     <div
-                      className="min-h-0 flex-1 overflow-auto rounded-b-xl"
-                      style={{ minHeight: "max(12.5rem, 28dvh)" }}
+                      className="min-h-0 flex-1 overflow-auto rounded-b-xl [@media(min-width:1024px)_and_(max-height:760px)]:min-h-[max(13rem,38dvh)]"
+                      style={{ minHeight: "max(12rem, 26dvh)" }}
                     >
-                      <table className="w-max min-w-full border-separate border-spacing-0 text-sm">
+                      <table className="w-max min-w-full border-separate border-spacing-0 text-sm [@media(min-width:1024px)_and_(max-height:760px)]:text-[13px] [@media(min-width:1024px)_and_(max-height:760px)]:[&_tbody_td]:!p-2 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!px-1.5 [@media(min-width:1024px)_and_(max-height:760px)]:[&_thead_th]:!py-1">
                         <thead>
                           <tr className="text-xs font-bold uppercase leading-none tracking-wider text-slate-800 dark:text-slate-300">
                             <th className="sticky top-0 left-0 z-50 box-border min-w-[4.5rem] w-[4.5rem] max-w-[4.5rem] border-b border-r border-slate-200 bg-indigo-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-600 dark:bg-slate-800/98">
@@ -942,7 +942,7 @@ export default function Home() {
                             <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
                               संदर्भ क्र.
                             </th>
-                            <th className="sticky top-0 z-40 min-w-[280px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                            <th className="sticky top-0 z-40 min-w-[280px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[140px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[160px]">
                               विषय
                             </th>
                             <th colSpan={2} className="sticky top-0 z-40 border-b border-x border-indigo-100/50 bg-indigo-100/40 py-1.5 px-2 text-center align-middle whitespace-nowrap dark:border-slate-700 dark:bg-slate-700/60">
@@ -957,7 +957,7 @@ export default function Home() {
                             <th colSpan={2} className="sticky top-0 z-40 border-b border-x border-indigo-100/50 bg-indigo-100/40 py-1.5 px-2 text-center align-middle whitespace-nowrap dark:border-slate-700 dark:bg-slate-700/60">
                               व्यक्तीची सही
                             </th>
-                            <th className="sticky top-0 z-40 min-w-[200px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
+                            <th className="sticky top-0 z-40 min-w-[200px] border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-left align-middle backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98 [@media(min-width:1024px)_and_(max-height:760px)]:min-w-[120px] [@media(min-width:1024px)_and_(max-width:1400px)]:min-w-[140px]">
                               शेरा
                             </th>
                             <th className="sticky top-0 z-40 border-b border-indigo-100/50 bg-gradient-to-r from-indigo-50/98 to-blue-50/98 py-1.5 px-2 text-center align-middle whitespace-nowrap backdrop-blur-sm dark:border-slate-700 dark:from-slate-800/98 dark:to-slate-800/98">
@@ -1008,7 +1008,7 @@ export default function Home() {
                               </td>
                               <td className="border-b border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.refNo || "-"}</td>
                               <td className="border-b border-slate-100 p-4 dark:border-slate-700">
-                                <div className="max-w-[300px] whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300">{record.subject}</div>
+                                <div className="max-w-[300px] whitespace-pre-line break-words font-medium leading-relaxed text-slate-700 dark:text-slate-300 [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[200px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[220px]">{record.subject}</div>
                               </td>
                               <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.notePages}</td>
                               <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.correspondencePages}</td>
@@ -1025,7 +1025,7 @@ export default function Home() {
                               <td className="border-b border-l border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.senderSignature || "-"}</td>
                               <td className="border-b border-r border-slate-100 p-4 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">{record.receiverSignature || "-"}</td>
                               <td className="border-b border-slate-100 p-4 dark:border-slate-700">
-                                <div className="max-w-[250px] whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400">{record.remarks}</div>
+                                <div className="max-w-[250px] whitespace-pre-line break-words text-xs leading-relaxed text-slate-500 dark:text-slate-400 [@media(min-width:1024px)_and_(max-height:760px)]:max-w-[180px] [@media(min-width:1024px)_and_(max-width:1400px)]:max-w-[200px]">{record.remarks}</div>
                               </td>
                               <td className="border-b border-slate-100 p-4 text-center font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300">{record.pageRange}</td>
                             </tr>
@@ -1033,7 +1033,7 @@ export default function Home() {
                         </tbody>
                       </table>
                     </div>
-                  <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] px-6 py-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-800 sm:flex-row">
+                  <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-t border-slate-200 bg-gradient-to-r from-[#F7F7F7] to-[#F0F0F0] px-6 py-4 dark:border-slate-700 dark:from-slate-800 dark:to-slate-800 sm:flex-row [@media(min-width:1024px)_and_(max-height:760px)]:gap-2 [@media(min-width:1024px)_and_(max-height:760px)]:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:py-2.5">
                     <div className="flex items-center gap-4">
                       <p className="text-sm text-slate-600 dark:text-slate-400">Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredData.length)}</span> of <span className="font-medium">{filteredData.length}</span></p>
                       <div className="flex items-center gap-2"><span className="text-sm text-slate-600 dark:text-slate-400">Items per page:</span><select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="w-20 px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-md bg-[#FAFAFA] dark:bg-slate-700 text-sm">{[5, 10, 20, 50].map((value) => (<option key={value} value={value}>{value}</option>))}</select></div>
@@ -1046,7 +1046,7 @@ export default function Home() {
                   </div>
                   </div>
                 </div>
-                <div className="mt-4 flex shrink-0 justify-between">
+                <div className="mt-4 flex shrink-0 justify-between [@media(min-width:1024px)_and_(max-height:760px)]:mt-2">
                   <button
                     onClick={goToPreviousStep}
                     className="px-6 py-2.5 rounded-xl font-medium transition-all bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 shadow-sm flex items-center gap-2"
