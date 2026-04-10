@@ -6,7 +6,20 @@ import * as XLSX from 'xlsx';
 import FileUpload from '../component/FileUpload';
 import ProgressBar from '../component/ProgressBar';
 import LogsPanel from '../component/LogPanel';
-import { SheetData, LogEntry } from '../../.next/types';
+
+interface LogEntry {
+  id: string;
+  message: string;
+  type: 'info' | 'processing' | 'success' | 'error';
+  timestamp: number;
+}
+
+interface SheetData {
+  name: string;
+  rowCount: number;
+  headers: string[];
+  data: Array<Array<string | number | boolean | null | undefined>>;
+}
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -207,9 +220,8 @@ export default function Home() {
             {currentStep === 'attach' && (
               <div className="space-y-4">
                 <FileUpload 
-                  onFilesSelected={handleFilesSelected} 
-                  isProcessing={isProcessing}
-                  darkMode={darkMode}
+                  files={files}
+                  setFiles={setFiles}
                 />
 
                 {/* File List - Only show file names and sizes, no title */}

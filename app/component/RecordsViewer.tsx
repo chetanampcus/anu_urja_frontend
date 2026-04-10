@@ -2,10 +2,21 @@
 'use client';
 
 import { useState } from 'react';
-import { Record, ProcessedFile } from '../../.next/types';
+
+interface ViewerRecord {
+  id: string;
+  sheetName: string;
+  rowNumber: number;
+  columns: { [key: string]: string | number | boolean | null | undefined };
+}
+
+interface ProcessedFile {
+  name: string;
+  status: 'success' | 'error';
+}
 
 interface RecordsViewerProps {
-  records: Record[];
+  records: ViewerRecord[];
   darkMode: boolean;
   onBack?: () => void;
   selectedFileName?: string | null;

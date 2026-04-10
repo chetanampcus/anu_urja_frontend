@@ -1,7 +1,14 @@
 // components/ProcessedList.tsx
 'use client';
 
-import { ProcessedFile } from '../../.next/types';
+interface ProcessedFile {
+  name: string;
+  size: number;
+  type?: string;
+  status: 'success' | 'error';
+  sheets?: Array<{ name: string; rowCount: number }>;
+  error?: string;
+}
 
 interface ProcessedListProps {
   processedFiles: ProcessedFile[];
