@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "../component/dialog";
 import { useRouter } from "next/navigation";
+import PdfViewer from "../component/PdfViewer"
 
 // Replaced SearchableFilter with CustomDropdown
 
@@ -589,9 +590,11 @@ function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
 function RecordsDataRow({
   record,
   variant,
+  onView
 }: {
   record: FileRecord;
   variant: "screen" | "print";
+  onView?: (record: FileRecord) => void;
 }) {
   const isP = variant === "print";
   const tdSticky = (left: string, c: string) =>
@@ -826,6 +829,8 @@ function RecordsPrintDocHeaderRow({
 }
 
 export default function DashboardPage() {
+  const [selectedRecord, setSelectedRecord] = useState<FileRecord | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const router = useRouter();
   const apiBaseUrl =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
@@ -1307,6 +1312,10 @@ export default function DashboardPage() {
                         key={record.id}
                         record={record}
                         variant="screen"
+                        onView={() => {
+                          setSelectedRecord(record);
+                          setPdfUrl('/18.pdf'); // Always show 18.pdf from public folder
+                        }}
                       />
                     ))
                   )}
@@ -1419,6 +1428,14 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+      <PdfViewer
+        isOpen={!!selectedRecord}
+        pdfUrl={pdfUrl || '/18.pdf'}
+        onClose={() => {
+          setSelectedRecord(null);
+          setPdfUrl(null);
+        }}
+      />
     </div>
   );
 }
