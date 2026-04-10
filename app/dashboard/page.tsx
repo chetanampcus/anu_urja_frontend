@@ -94,7 +94,7 @@ interface DocumentResponse {
   updatedAt: string;
 }
 
-const fallbackProjects = ["तारापूर अणुऊर्जा प्रकल्प ३ & ४", "सुर्या प्रकल्प"];
+const fallbackProjects = ["सुर्या प्रकल्प"];
 const DEFAULT_SEARCH_COLUMNS = ["Subject", "Remarks", "File No"];
 
 function toRecord(value: unknown): Record<string, unknown> | null {
@@ -1234,7 +1234,7 @@ export default function DashboardPage() {
         aria-label="Page title banner"
       >
         <Image
-          src="/gov.png"
+          src="/Rehabilitation department logo of Palghar 1.png"
           alt=""
           fill
           priority

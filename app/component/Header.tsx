@@ -7,8 +7,8 @@ import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 const tabs = [
-  { name: 'Upload', path: '/' },
-  { name: 'View', path: '/dashboard' },
+  { name: 'Upload Project', path: '/' },
+  { name: 'View Project', path: '/dashboard' },
 ];
 
 const Header = () => {
@@ -69,7 +69,7 @@ const Header = () => {
         {/* Logo */}
         <Link href="/">
           <Image
-            src="/gov.png"
+            src="/Rehabilitation department logo of Palghar 1.png"
             width={60}
             height={10}
             alt="Logo"

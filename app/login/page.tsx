@@ -151,8 +151,8 @@ const LandingPage = () => {
           {/* Logo */}
           <div className="w-25">
             <Image
-              src="/gov.png"
-              alt="Energy Department Logo"
+              src="/Rehabilitation department logo of Palghar 1.png"
+              alt="Rehabilitation department logo of Palghar"
               width={80}
               height={30}
               className="w-full h-auto object-contain"
@@ -161,8 +161,8 @@ const LandingPage = () => {
 
           {/* Heading */}
           <div className="text-center">
-            <h1 className="text-[25px] font-bold text-black leading-snug">
-              Energy Department System
+            <h1 className="text-[20px] font-bold text-black leading-snug">
+              Department of Rehabilitation,Palghar District  
             </h1>
             <p className="text-[12px] text-[#636363] mt-0.5">
               Login to access your dashboard
@@ -175,7 +175,7 @@ const LandingPage = () => {
 
             {/* Email */}
             <div className="flex flex-col gap-1">
-              <label className="text-[12px] text-black">Email Address</label>
+              <label className="text-[12px] text-black">Email Address Or Username</label>
               <input
                 type="text"
                 placeholder="Enter username or email"

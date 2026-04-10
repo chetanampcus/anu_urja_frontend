@@ -323,7 +323,6 @@ function FileUpload({ onFilesSelected, isProcessing, darkMode }: { onFilesSelect
 // ==================== Main Component ====================
 
 const availableProjects = [
-  "तारापूर अणुऊर्जा प्रकल्प ३ & ४",
   "सुर्या प्रकल्प",
 ];
 
@@ -564,9 +563,9 @@ async function extractAllRecordsFromExcel(
 type StepKey = 'upload' | 'records' | 'mapping';
 
 const steps: { key: StepKey; label: string; icon: LucideIcon }[] = [
-  { key: "upload", label: "Upload", icon: Upload },
-  { key: "records", label: "Records", icon: Table2 },
-  { key: "mapping", label: "PDF Mapping", icon: FileStack },
+  { key: "upload", label: "Upload Project File", icon: Upload },
+  { key: "records", label: "Review Project Records", icon: Table2 },
+  { key: "mapping", label: "Nasti PDF Mapping", icon: FileStack },
 ];
 
 export default function Home() {
@@ -1101,7 +1100,7 @@ export default function Home() {
       <main className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-1 flex-col px-3 py-3 sm:px-4 [@media(min-width:1024px)_and_(max-height:760px)]:px-3 [@media(min-width:1024px)_and_(max-height:760px)]:py-3">
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:items-stretch lg:gap-3">
           {/* Left: stepper — max height cap on lg; must use overflow-y-auto (never overflow-hidden) so all steps scroll into view */}
-          <aside className="flex min-h-0 w-full max-h-[38dvh] shrink self-stretch overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:thin] [-ms-overflow-style:auto] [scrollbar-gutter:stable] lg:max-h-[70%] lg:min-h-0 lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 lg:self-start [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-[16%] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-w-[8.5rem] [@media(min-width:1024px)_and_(max-height:760px)]:lg:max-w-[11rem]">
+          {/* <aside className="flex min-h-0 w-full max-h-[38dvh] shrink self-stretch overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:thin] [-ms-overflow-style:auto] [scrollbar-gutter:stable] lg:max-h-[70%] lg:min-h-0 lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 lg:self-start [@media(min-width:1024px)_and_(max-height:760px)]:lg:w-[16%] [@media(min-width:1024px)_and_(max-height:760px)]:lg:min-w-[8.5rem] [@media(min-width:1024px)_and_(max-height:760px)]:lg:max-w-[11rem]">
             <div className="flex w-full min-w-0 flex-col overflow-visible rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-4 lg:min-h-0 [@media(min-width:1024px)_and_(max-height:760px)]:p-2.5 [@media(min-width:1024px)_and_(max-height:760px)]:sm:p-2.5">
               <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-3 [@media(min-width:1024px)_and_(max-height:760px)]:mb-1 [@media(min-width:1024px)_and_(max-height:760px)]:sm:mb-1.5">
                 Progress
@@ -1185,6 +1184,110 @@ export default function Home() {
                 })}
               </div>
               <div className="mt-4 shrink-0 border-t border-slate-100 pt-3 dark:border-slate-600 [@media(min-width:1024px)_and_(max-height:760px)]:mt-3 [@media(min-width:1024px)_and_(max-height:760px)]:pt-2">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
+                    style={{
+                      width:
+                        activeTab === "upload"
+                          ? "33%"
+                          : activeTab === "records"
+                            ? "66%"
+                            : "100%",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </aside> */}
+
+          <aside className="flex h-full w-full max-h-[38vh] shrink overflow-hidden overflow-y-auto overscroll-contain lg:max-h-[70vh] lg:w-[18%] lg:min-w-[9rem] lg:max-w-[12.5rem] lg:shrink-0 lg:self-start">
+            <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:p-4 lg:min-h-0">
+
+              <p className="mb-2 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:mb-3">
+                Progress
+              </p>
+
+              <div className="flex min-h-0 w-full min-w-0 flex-col pb-2">
+                {steps.map((step, index) => {
+                  const isActive = activeTab === step.key;
+                  const isCompleted = isStepCompleted(step.key);
+                  const disabled =
+                    (step.key === "records" && allRecords.length === 0) ||
+                    (step.key === "mapping" && allRecords.length === 0);
+
+                  const StepIcon = step.icon;
+
+                  return (
+                    <div key={step.key} className="flex flex-col">
+                      <button
+                        type="button"
+                        aria-current={isActive ? "step" : undefined}
+                        disabled={disabled}
+                        onClick={() => goToStep(step.key)}
+                        className={`group flex w-full min-w-0 items-center gap-2 rounded-lg p-2 text-left transition-all duration-200 sm:gap-2.5 sm:p-2.5 ${isActive
+                          ? "border-2 border-[#09b556] bg-emerald-50/70 shadow-md ring-2 ring-[#09b556]/25 dark:border-emerald-500 dark:bg-emerald-950/35"
+                          : "border-2 border-transparent bg-slate-50/50 dark:bg-slate-700/30"
+                          } ${!disabled && !isActive
+                            ? "hover:border-slate-300 hover:bg-white dark:hover:border-slate-500 dark:hover:bg-slate-700/50"
+                            : ""
+                          } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                      >
+                        {/* ICON */}
+                        <span
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors sm:h-11 sm:w-11 ${isActive
+                            ? "border-emerald-200 bg-white text-[#09b556]"
+                            : isCompleted
+                              ? "border-emerald-200/80 bg-emerald-100 text-emerald-700"
+                              : "border-slate-200 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-800"
+                            }`}
+                        >
+                          {isCompleted ? (
+                            <Check className="h-4 w-4 stroke-[2.5]" aria-hidden />
+                          ) : (
+                            <StepIcon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+                          )}
+                        </span>
+
+                        {/* TEXT */}
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block text-sm font-semibold leading-tight break-words ${isActive
+                              ? "text-emerald-800 dark:text-emerald-300"
+                              : isCompleted
+                                ? "text-emerald-700 dark:text-emerald-400"
+                                : "text-slate-600 dark:text-slate-400"
+                              }`}
+                          >
+                            {step.label}
+                          </span>
+
+                          <span className="mt-0.5 block text-[11px] font-medium leading-snug text-slate-400 dark:text-slate-500">
+                            {step.key === "upload" && "Spreadsheet upload"}
+                            {step.key === "records" && "Review extracted rows"}
+                            {step.key === "mapping" && "Link PDF documents"}
+                          </span>
+                        </span>
+                      </button>
+
+                      {/* CONNECTOR */}
+                      {index < steps.length - 1 && (
+                        <div className="flex justify-start py-2 pl-6" aria-hidden>
+                          <div
+                            className={`w-0.5 min-h-[24px] rounded-full ${isCompleted
+                              ? "bg-gradient-to-b from-emerald-400 to-emerald-600"
+                              : "bg-slate-200 dark:bg-slate-600"
+                              }`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* PROGRESS BAR */}
+              <div className="mt-4 shrink-0 border-t border-slate-100 pt-3 dark:border-slate-600">
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div
                     className="h-full bg-gradient-to-r from-green-400 to-emerald-600 transition-all duration-500"
@@ -1377,7 +1480,7 @@ export default function Home() {
                   className="px-4 py-2 rounded-lg bg-[#09B556] hover:bg-[#079c4a] text-white transition disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={files.length === 0 || isProcessing}
                 >
-                  {isProcessing ? "Extracting…" : "Extract again"}
+                  {isProcessing ? "Extracting…" : "Extract"}
                 </button>
               </div>
 
