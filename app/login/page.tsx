@@ -141,7 +141,7 @@ const LandingPage = () => {
 
       {/* Left side image */}
       <div className="hidden lg:flex lg:w-[55%] h-screen relative">
-        <Image src="/vish (1).png" alt="Team Working" fill className="object-cover" priority />
+        <Image src="/sdxcs.png" alt="Team Working" fill className="object-cover" priority />
       </div>
 
       {/* Right side */}
