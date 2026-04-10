@@ -852,7 +852,15 @@ export default function DashboardPage() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfDocumentName, setPdfDocumentName] = useState<string>("");
   const [viewingRecordId, setViewingRecordId] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [pdfStatusPopup, setPdfStatusPopup] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+  }>({
+    open: false,
+    title: "",
+    message: "",
+  });
   const router = useRouter();
   const apiBaseUrl =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
@@ -1144,9 +1152,13 @@ export default function DashboardPage() {
   };
 
   const handleViewPdf = async (record: FileRecord) => {
+    const showPdfStatusPopup = (title: string, message: string) => {
+      setPdfStatusPopup({ open: true, title, message });
+    };
+
     const recordId = String(record.id ?? "").trim();
     if (!recordId) {
-      setToastMessage("PDF not found for this record.");
+      showPdfStatusPopup("PDF Not Found", "PDF not found for this record.");
       return;
     }
 
@@ -1154,18 +1166,21 @@ export default function DashboardPage() {
     try {
       const documentResponse = await getDocumentByRecordId(recordId);
       if (!documentResponse.documentPath) {
-        setToastMessage("PDF not found for this record.");
+        showPdfStatusPopup("PDF Not Found", "PDF not found for this record.");
         return;
       }
 
       const resolvedPdfUrl = resolveDocumentUrl(documentResponse.documentPath);
       const pdfStatus = await checkPdfAvailability(resolvedPdfUrl);
       if (pdfStatus === 404) {
-        setToastMessage("PDF not found for this record.");
+        showPdfStatusPopup("PDF Not Found", "PDF not found for this record.");
         return;
       }
       if (pdfStatus !== null && pdfStatus >= 500) {
-        setToastMessage("Unable to load PDF. Please try again.");
+        showPdfStatusPopup(
+          "Unable to Load PDF",
+          "Unable to load PDF. Please try again.",
+        );
         return;
       }
 
@@ -1175,9 +1190,12 @@ export default function DashboardPage() {
     } catch (error) {
       const status = (error as Error & { status?: number })?.status;
       if (status === 404) {
-        setToastMessage("PDF not found for this record.");
+        showPdfStatusPopup("PDF Not Found", "PDF not found for this record.");
       } else {
-        setToastMessage("Unable to load PDF. Please try again.");
+        showPdfStatusPopup(
+          "Unable to Load PDF",
+          "Unable to load PDF. Please try again.",
+        );
       }
       if (process.env.NODE_ENV === "development") {
         console.debug("View PDF failed", { recordId, status, error });
@@ -1186,12 +1204,6 @@ export default function DashboardPage() {
       setViewingRecordId(null);
     }
   };
-
-  useEffect(() => {
-    if (!toastMessage) return;
-    const timeoutId = window.setTimeout(() => setToastMessage(null), 3000);
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   const handleGoToLogin = () => {
     router.replace("/login");
@@ -1576,11 +1588,37 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
-      {toastMessage ? (
-        <div className="pointer-events-none fixed right-4 bottom-4 z-[10000] rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-          {toastMessage}
-        </div>
-      ) : null}
+      <Dialog
+        open={pdfStatusPopup.open}
+        onOpenChange={(nextOpen) =>
+          setPdfStatusPopup((prev) => ({ ...prev, open: nextOpen }))
+        }
+      >
+        <DialogContent className="max-w-md rounded-2xl border border-amber-200/70 bg-white p-0 shadow-2xl dark:border-amber-900/60 dark:bg-slate-900">
+          <DialogHeader className="border-b border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-5 dark:border-amber-900/40 dark:from-amber-950/35 dark:to-orange-950/20">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/45 dark:text-amber-300">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <DialogTitle className="text-xl text-slate-900 dark:text-slate-100">
+              {pdfStatusPopup.title || "Notice"}
+            </DialogTitle>
+            <DialogDescription className="pt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {pdfStatusPopup.message || "Something went wrong."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="px-6 py-4 sm:justify-end">
+            <Button
+              type="button"
+              onClick={() =>
+                setPdfStatusPopup({ open: false, title: "", message: "" })
+              }
+              className="w-full sm:w-auto"
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <PdfViewer
         isOpen={!!selectedRecord}
         pdfUrl={pdfUrl || ""}
