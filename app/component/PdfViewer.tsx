@@ -5,6 +5,7 @@ interface PdfViewerProps {
   pdfUrl: string;
   isOpen: boolean;
   onClose: () => void;
+  documentName?: string;
   selectedProject?: string;
   rowData?: any;
 }
@@ -13,6 +14,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   pdfUrl,
   isOpen,
   onClose,
+  documentName,
   selectedProject,
   rowData,
 }) => {
@@ -20,7 +22,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
 
   if (!isOpen) return null;
 
-  const fileName = pdfUrl?.split("/").pop() || "Document.pdf";
+  const fileName = documentName || pdfUrl?.split("/").pop() || "Document.pdf";
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 2));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.5));

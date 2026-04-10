@@ -10,6 +10,7 @@ import {
   Check,
   Printer,
   Eye,
+  Loader2,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "../component/button";
@@ -29,7 +30,7 @@ import {
   DialogTitle,
 } from "../component/dialog";
 import { useRouter } from "next/navigation";
-import PdfViewer from "../component/PdfViewer"
+import PdfViewer from "../component/PdfViewer";
 
 // Replaced SearchableFilter with CustomDropdown
 
@@ -84,7 +85,17 @@ interface RecordsPageApiResponse {
   last?: boolean;
 }
 
+interface DocumentResponse {
+  id: string;
+  documentName: string;
+  documentPath: string;
+  recordId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const fallbackProjects = ["तारापूर अणुऊर्जा प्रकल्प ३ & ४", "सुर्या प्रकल्प"];
+const DEFAULT_SEARCH_COLUMNS = ["Subject", "Remarks", "File No"];
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
@@ -140,218 +151,218 @@ function parseRecordsResponse(payload: unknown): RecordsPageApiResponse {
   };
 }
 
-const sampleData: FileRecord[] = [
-  {
-    id: 1,
-    serialNo: 1,
-    shelfNo: "",
-    bundleNo: "-",
-    fileNo: "40 (3) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
-    pageRange: "1 ते 655",
-  },
-  {
-    id: 2,
-    serialNo: 2,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "40 (2) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
-    pageRange: "1 ते 505",
-  },
-  {
-    id: 3,
-    serialNo: 3,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "-",
-    refNo: "-",
-    subject:
-      "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत संचिका असल्याने कायमस्वरुपी ठेवण्यात येते.",
-    pageRange: "1 ते 183",
-  },
-  {
-    id: 4,
-    serialNo: 4,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "40 (1) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
-    pageRange: "1 ते 307",
-  },
-  {
-    id: 5,
-    serialNo: 5,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "-",
-    refNo: "-",
-    subject: `तारापुर अणुउर्जा प्रकल्प टप्पा क्र. 3 व 4
----------------------------------------------------
-1) मौजे अक्करपट्टी व पोफरण येथील प्रकल्पग्रस्तांच्या नोकरी व त्यांचे मुलांना शाळा प्रवेशाबाबत.
-2) आर टी ई नुसार दिलेल्या प्रवेशाबाबत.`,
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks: `1) मौजे अक्करपट्टी व पोफरण येथील प्रकल्पग्रस्तांच्या नोकरी व त्यांचे मुलांना शाळा प्रवेशाबाबत व
-2) आर टी ई नुसार दिलेल्या प्रवेशाबाबत माहिती असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.`,
-    pageRange: "",
-  },
-  {
-    id: 6,
-    serialNo: 6,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "9 अ",
-    refNo: "-",
-    subject: "मौजे अक्करपट्टी संयुक्त मोजणी पत्रक गावठाण घरांचे मो.र.नं. 91",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "मौजे अक्करपट्टी संयुक्त मोजणी पत्रक गावठाण घरांचे मो.र.नं. 91 असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
-    pageRange: "1 ते 505",
-  },
-  {
-    id: 7,
-    serialNo: 7,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "40 (7) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
-    pageRange: "1 ते 713",
-  },
-  {
-    id: 8,
-    serialNo: 8,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "40 (4) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
-    pageRange: "1 ते 433",
-  },
-  {
-    id: 9,
-    serialNo: 9,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "40 (5) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
-    pageRange: "1 ते 501",
-  },
-  {
-    id: 10,
-    serialNo: 10,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "40 (8) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
-    pageRange: "1 ते 775",
-  },
-  {
-    id: 11,
-    serialNo: 11,
-    shelfNo: "-",
-    bundleNo: "-",
-    fileNo: "40 (6) अ",
-    refNo: "-",
-    subject:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
-    notePages: "-",
-    correspondencePages: "-",
-    classification: "अ",
-    destructionDate: "कायम",
-    senderSignature: "",
-    receiverSignature: "",
-    remarks:
-      "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
-    pageRange: "1 ते 943",
-  },
-];
+// const sampleData: FileRecord[] = [
+//   {
+//     id: 1,
+//     serialNo: 1,
+//     shelfNo: "",
+//     bundleNo: "-",
+//     fileNo: "40 (3) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+//     pageRange: "1 ते 655",
+//   },
+//   {
+//     id: 2,
+//     serialNo: 2,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "40 (2) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+//     pageRange: "1 ते 505",
+//   },
+//   {
+//     id: 3,
+//     serialNo: 3,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "-",
+//     refNo: "-",
+//     subject:
+//       "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "मौजे अक्करपट्टी व पोफरण येथील प्रकल्पाग्रस्तांसाठी कौशल्य विकास कार्यक्रमांतर्गत CSR FUND उपलब्ध करुन देणेबाबत संचिका असल्याने कायमस्वरुपी ठेवण्यात येते.",
+//     pageRange: "1 ते 183",
+//   },
+//   {
+//     id: 4,
+//     serialNo: 4,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "40 (1) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी घरबांधणी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर, जि. ठाणे येथील खालीलप्राणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
+//     pageRange: "1 ते 307",
+//   },
+//   {
+//     id: 5,
+//     serialNo: 5,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "-",
+//     refNo: "-",
+//     subject: `तारापुर अणुउर्जा प्रकल्प टप्पा क्र. 3 व 4
+// ---------------------------------------------------
+// 1) मौजे अक्करपट्टी व पोफरण येथील प्रकल्पग्रस्तांच्या नोकरी व त्यांचे मुलांना शाळा प्रवेशाबाबत.
+// 2) आर टी ई नुसार दिलेल्या प्रवेशाबाबत.`,
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks: `1) मौजे अक्करपट्टी व पोफरण येथील प्रकल्पग्रस्तांच्या नोकरी व त्यांचे मुलांना शाळा प्रवेशाबाबत व
+// 2) आर टी ई नुसार दिलेल्या प्रवेशाबाबत माहिती असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.`,
+//     pageRange: "",
+//   },
+//   {
+//     id: 6,
+//     serialNo: 6,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "9 अ",
+//     refNo: "-",
+//     subject: "मौजे अक्करपट्टी संयुक्त मोजणी पत्रक गावठाण घरांचे मो.र.नं. 91",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "मौजे अक्करपट्टी संयुक्त मोजणी पत्रक गावठाण घरांचे मो.र.नं. 91 असल्याने संचिका कायमस्वरुपी ठेवण्यात येते.",
+//     pageRange: "1 ते 505",
+//   },
+//   {
+//     id: 7,
+//     serialNo: 7,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "40 (7) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+//     pageRange: "1 ते 713",
+//   },
+//   {
+//     id: 8,
+//     serialNo: 8,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "40 (4) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+//     pageRange: "1 ते 433",
+//   },
+//   {
+//     id: 9,
+//     serialNo: 9,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "40 (5) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+//     pageRange: "1 ते 501",
+//   },
+//   {
+//     id: 10,
+//     serialNo: 10,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "40 (8) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+//     pageRange: "1 ते 775",
+//   },
+//   {
+//     id: 11,
+//     serialNo: 11,
+//     shelfNo: "-",
+//     bundleNo: "-",
+//     fileNo: "40 (6) अ",
+//     refNo: "-",
+//     subject:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे असून निवासी वापरास सुयोग्य आहे.",
+//     notePages: "-",
+//     correspondencePages: "-",
+//     classification: "अ",
+//     destructionDate: "कायम",
+//     senderSignature: "",
+//     receiverSignature: "",
+//     remarks:
+//       "अक्करपट्टी व पोफरणसाठी प्रकल्पांतर्गत (नवीन गावठाण) ता. पालघर जि. ठाणे येथील खालीलप्रमाणे दिलेले प्लॉट मध्ये बांधण्यात आलेले घर निर्धारित मानकाप्रमाणे संचिका असल्याने कायमस्वरुपी ठेवण्यात येत आहे.",
+//     pageRange: "1 ते 943",
+//   },
+// ];
 
 function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
   const isP = variant === "print";
@@ -590,11 +601,13 @@ function RecordsTableHeaderRows({ variant }: { variant: "screen" | "print" }) {
 function RecordsDataRow({
   record,
   variant,
-  onView
+  onView,
+  isViewLoading = false,
 }: {
   record: FileRecord;
   variant: "screen" | "print";
   onView?: (record: FileRecord) => void;
+  isViewLoading?: boolean;
 }) {
   const isP = variant === "print";
   const tdSticky = (left: string, c: string) =>
@@ -653,10 +666,10 @@ function RecordsDataRow({
         }
       >
         {isP ? (
-          record.refNo || "-"
+          record.fileNo || "-"
         ) : (
           <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-[#F0F0F0] px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
-            {record.refNo || "-"}
+            {record.fileNo || "-"}
           </span>
         )}
       </td>
@@ -667,7 +680,7 @@ function RecordsDataRow({
             : "border-b border-slate-100 bg-white p-4 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
         }
       >
-        {record.fileNo || "-"}
+        {record.refNo || "-"}
       </td>
       <td
         className={
@@ -786,10 +799,16 @@ function RecordsDataRow({
         <td className="border-b border-slate-100 bg-white p-2 text-center align-middle print:hidden dark:border-slate-700 dark:bg-slate-800">
           <button
             type="button"
+            onClick={() => onView?.(record)}
+            disabled={isViewLoading}
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-indigo-400 dark:hover:bg-slate-700 dark:hover:text-indigo-300"
             aria-label={`View files for record ${record.serialNo}`}
           >
-            <Eye className="h-4 w-4" aria-hidden />
+            {isViewLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Eye className="h-4 w-4" aria-hidden />
+            )}
           </button>
         </td>
       ) : null}
@@ -831,15 +850,18 @@ function RecordsPrintDocHeaderRow({
 export default function DashboardPage() {
   const [selectedRecord, setSelectedRecord] = useState<FileRecord | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfDocumentName, setPdfDocumentName] = useState<string>("");
+  const [viewingRecordId, setViewingRecordId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const router = useRouter();
   const apiBaseUrl =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
   const [authChecked, setAuthChecked] = useState(false);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const availableColumns = ["Subject", "Remarks"];
+  const availableColumns = DEFAULT_SEARCH_COLUMNS;
   const [searchColumns, setSearchColumns] =
-    useState<string[]>(availableColumns);
+    useState<string[]>([...DEFAULT_SEARCH_COLUMNS]);
   const [shelfNoFilter, setShelfNoFilter] = useState("");
   const [gatthaNoFilter, setGatthaNoFilter] = useState("");
   const [classificationFilter, setClassificationFilter] = useState("");
@@ -874,6 +896,53 @@ export default function DashboardPage() {
   const selectedProjectId =
     projectOptions.find((project) => project.name === selectedProject)?.id ??
     defaultProjectId;
+
+  const getDocumentByRecordId = async (
+    recordId: string,
+  ): Promise<DocumentResponse> => {
+    const response = await fetch(
+      `${apiBaseUrl}/api/documents/record/${recordId}`,
+      {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      },
+    );
+
+    if (!response.ok) {
+      const error = new Error("Document fetch failed.");
+      (error as Error & { status?: number }).status = response.status;
+      throw error;
+    }
+
+    const payload = (await response.json()) as DocumentResponse;
+    if (process.env.NODE_ENV === "development") {
+      console.debug("Fetched document by recordId", { recordId, payload });
+    }
+    return payload;
+  };
+
+  const resolveDocumentUrl = (documentPath: string): string => {
+    const normalizedPath = documentPath.replace(/\\/g, "/").trim();
+    if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath;
+
+    const baseOrigin = new URL(apiBaseUrl).origin;
+    const pathname = normalizedPath.startsWith("/")
+      ? normalizedPath
+      : `/${normalizedPath}`;
+    return `${baseOrigin}${pathname}`;
+  };
+
+  const checkPdfAvailability = async (url: string): Promise<number | null> => {
+    try {
+      const response = await fetch(url, {
+        method: "HEAD",
+      });
+      return response.status;
+    } catch {
+      // If CORS/network blocks pre-check, let iframe attempt rendering.
+      return null;
+    }
+  };
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -947,6 +1016,11 @@ export default function DashboardPage() {
         const mappedSearchFields = searchColumns
           .map((column) => searchFieldMap[column])
           .filter(Boolean);
+        const useBackendDefaultSearch =
+          searchColumns.length === DEFAULT_SEARCH_COLUMNS.length &&
+          DEFAULT_SEARCH_COLUMNS.every((column) =>
+            searchColumns.includes(column),
+          );
 
         const params = new URLSearchParams();
         params.set("projectId", selectedProjectId);
@@ -955,7 +1029,7 @@ export default function DashboardPage() {
         params.set("sortBy", "updatedAt");
         params.set("sortDir", "desc");
         if (searchQuery.trim()) params.set("search", searchQuery.trim());
-        if (mappedSearchFields.length > 0) {
+        if (!useBackendDefaultSearch && mappedSearchFields.length > 0) {
           params.set("searchFields", mappedSearchFields.join(","));
         }
         if (shelfNoFilter) params.set("shelfNo", shelfNoFilter);
@@ -1053,6 +1127,56 @@ export default function DashboardPage() {
     window.print();
   };
 
+  const handleViewPdf = async (record: FileRecord) => {
+    const recordId = String(record.id ?? "").trim();
+    if (!recordId) {
+      setToastMessage("PDF not found for this record.");
+      return;
+    }
+
+    setViewingRecordId(recordId);
+    try {
+      const documentResponse = await getDocumentByRecordId(recordId);
+      if (!documentResponse.documentPath) {
+        setToastMessage("PDF not found for this record.");
+        return;
+      }
+
+      const resolvedPdfUrl = resolveDocumentUrl(documentResponse.documentPath);
+      const pdfStatus = await checkPdfAvailability(resolvedPdfUrl);
+      if (pdfStatus === 404) {
+        setToastMessage("PDF not found for this record.");
+        return;
+      }
+      if (pdfStatus !== null && pdfStatus >= 500) {
+        setToastMessage("Unable to load PDF. Please try again.");
+        return;
+      }
+
+      setPdfDocumentName(documentResponse.documentName || "Document.pdf");
+      setPdfUrl(resolvedPdfUrl);
+      setSelectedRecord(record);
+    } catch (error) {
+      const status = (error as Error & { status?: number })?.status;
+      if (status === 404) {
+        setToastMessage("PDF not found for this record.");
+      } else {
+        setToastMessage("Unable to load PDF. Please try again.");
+      }
+      if (process.env.NODE_ENV === "development") {
+        console.debug("View PDF failed", { recordId, status, error });
+      }
+    } finally {
+      setViewingRecordId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timeoutId = window.setTimeout(() => setToastMessage(null), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
+
   const handleGoToLogin = () => {
     router.replace("/login");
   };
@@ -1081,7 +1205,8 @@ export default function DashboardPage() {
                 Access Denied
               </DialogTitle>
               <DialogDescription className="pt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                You must login first to view this page. Please sign in to continue.
+                You must login first to view this page. Please sign in to
+                continue.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="px-6 py-4 sm:justify-end">
@@ -1312,10 +1437,8 @@ export default function DashboardPage() {
                         key={record.id}
                         record={record}
                         variant="screen"
-                        onView={() => {
-                          setSelectedRecord(record);
-                          setPdfUrl('/18.pdf'); // Always show 18.pdf from public folder
-                        }}
+                        isViewLoading={viewingRecordId === String(record.id)}
+                        onView={handleViewPdf}
                       />
                     ))
                   )}
@@ -1428,12 +1551,21 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+      {toastMessage ? (
+        <div className="pointer-events-none fixed right-4 bottom-4 z-[10000] rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+          {toastMessage}
+        </div>
+      ) : null}
       <PdfViewer
         isOpen={!!selectedRecord}
-        pdfUrl={pdfUrl || '/18.pdf'}
+        pdfUrl={pdfUrl || ""}
+        documentName={pdfDocumentName}
+        selectedProject={selectedProject}
+        rowData={selectedRecord}
         onClose={() => {
           setSelectedRecord(null);
           setPdfUrl(null);
+          setPdfDocumentName("");
         }}
       />
     </div>
