@@ -597,6 +597,7 @@ export default function Home() {
   const [checks, setChecks] = useState([false, false, false, false]);
   const [stage2Completed, setStage2Completed] = useState(false);
   const [mappingLogs, setMappingLogs] = useState<MappingLogEntry[]>([]);
+  const [showProcessCompletePopup, setShowProcessCompletePopup] = useState(false);
 
   const allChecked = checks.every(Boolean);
   const defaultProjectId =
@@ -1054,6 +1055,11 @@ export default function Home() {
 
   const handleGoToLogin = () => {
     router.replace("/login");
+  };
+
+  const handleOpenViewPage = () => {
+    setShowProcessCompletePopup(false);
+    router.push("/dashboard");
   };
 
   if (!authChecked && !isUnauthorized) {
@@ -1727,7 +1733,7 @@ export default function Home() {
               </button>
               {stage2Completed && (
                 <button
-                  onClick={() => alert('Process Completed Successfully!')}
+                  onClick={() => setShowProcessCompletePopup(true)}
                   className="px-6 py-2.5 rounded-xl font-medium transition-all bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg flex items-center gap-2"
                 >
                   <CheckCircle className="w-5 h-5" />
@@ -1743,6 +1749,40 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {showProcessCompletePopup ? (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/35 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-emerald-200 bg-white shadow-2xl dark:border-emerald-900/50 dark:bg-slate-900">
+            <div className="border-b border-emerald-100 bg-emerald-50/80 px-6 py-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                <CheckCircle className="h-7 w-7" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                Process Completed Successfully!
+              </h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                Your mapping process is complete. Click Open to view records.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setShowProcessCompletePopup(false)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenViewPage}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+              >
+                Open
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
     </div>
   );
