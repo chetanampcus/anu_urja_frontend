@@ -1117,9 +1117,25 @@ export default function DashboardPage() {
   const displayStart =
     totalElements === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const displayEnd = Math.min(currentPage * itemsPerPage, totalElements);
+  const hasActiveSearchOrFilters =
+    searchQuery.trim().length > 0 ||
+    shelfNoFilter.length > 0 ||
+    gatthaNoFilter.length > 0 ||
+    classificationFilter.length > 0 ||
+    searchColumns.length !== DEFAULT_SEARCH_COLUMNS.length ||
+    DEFAULT_SEARCH_COLUMNS.some((column) => !searchColumns.includes(column));
 
   const handleItemsPerPageChange = (value: number) => {
     setItemsPerPage(value);
+    setCurrentPage(1);
+  };
+
+  const handleResetSearchAndFilters = () => {
+    setSearchQuery("");
+    setSearchColumns([...DEFAULT_SEARCH_COLUMNS]);
+    setShelfNoFilter("");
+    setGatthaNoFilter("");
+    setClassificationFilter("");
     setCurrentPage(1);
   };
 
@@ -1394,6 +1410,15 @@ export default function DashboardPage() {
                     onChange={setClassificationFilter}
                     className="min-w-[140px] flex-1 sm:max-w-[200px] lg:min-w-[160px] lg:max-w-none lg:flex-1"
                   />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleResetSearchAndFilters}
+                    disabled={!hasActiveSearchOrFilters || recordsLoading}
+                    className="h-10 min-w-[110px] shrink-0 border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-500"
+                  >
+                    Reset
+                  </Button>
                 </div>
               </div>
             </div>
