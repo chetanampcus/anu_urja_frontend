@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Bell, Settings, User, LogOut } from 'lucide-react';
+import { Bell, Settings, User, LogOut, Mail, IdCard, AtSign, ShieldCheck, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 const tabs = [
@@ -140,12 +140,46 @@ const Header = () => {
 
 const ProfileMenu = () => {
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [authUser, setAuthUser] = useState<Record<string, unknown> | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("authUser");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      setAuthUser(parsed);
+    } catch {
+      setAuthUser(null);
+    }
+  }, []);
+
+  const displayName =
+    (typeof authUser?.name === "string" && authUser.name) ||
+    (typeof authUser?.username === "string" && authUser.username) ||
+    "User";
+  const username =
+    (typeof authUser?.username === "string" && authUser.username) || "-";
+  const email =
+    (typeof authUser?.email === "string" && authUser.email) || "-";
+  const userId =
+    (typeof authUser?.userId === "string" && authUser.userId) || "-";
+  const role =
+    (typeof authUser?.role === "string" && authUser.role) ||
+    "Authenticated User";
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "U";
 
   const handleLogout = () => {
     localStorage.removeItem("authUser");
     localStorage.removeItem("isLoggedIn");
     setOpen(false);
+    setProfileOpen(false);
     router.replace("/login");
   };
 
@@ -187,6 +221,10 @@ const ProfileMenu = () => {
           }}
         >
           <button
+            onClick={() => {
+              setOpen(false);
+              setProfileOpen(true);
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -219,6 +257,165 @@ const ProfileMenu = () => {
             <LogOut size={16} />
             Logout
           </button>
+        </div>
+      )}
+
+      {profileOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1200,
+            background: 'rgba(15, 23, 42, 0.35)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => setProfileOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '560px',
+              borderRadius: '20px',
+              border: '1px solid #dbe4ef',
+              background: '#ffffff',
+              boxShadow: '0 20px 50px rgba(15, 23, 42, 0.18)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                padding: '18px 22px',
+                background:
+                  'linear-gradient(135deg, rgba(9,181,86,0.12), rgba(59,130,246,0.10))',
+                borderBottom: '1px solid #e5edf7',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #09b556, #0ea5e9)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                  }}
+                >
+                  {initials}
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+                    {displayName}
+                  </p>
+                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#475569' }}>
+                    Profile Overview
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setProfileOpen(false)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                }}
+                aria-label="Close profile"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '18px 22px 22px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                }}
+              >
+                {[
+                  { key: 'Email', value: email, icon: <Mail size={14} /> },
+                  { key: 'Username', value: username, icon: <AtSign size={14} /> },
+                  { key: 'User ID', value: userId, icon: <IdCard size={14} /> },
+                  { key: 'Role', value: role, icon: <ShieldCheck size={14} /> },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      padding: '10px 12px',
+                      background: '#f8fafc',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: '#64748b',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {item.icon}
+                      {item.key}
+                    </div>
+                    <p
+                      style={{
+                        margin: '6px 0 0',
+                        color: '#0f172a',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div
+                style={{
+                  marginTop: '14px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  borderRadius: '999px',
+                  border: '1px solid #86efac',
+                  background: '#f0fdf4',
+                  color: '#166534',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  padding: '6px 10px',
+                }}
+              >
+                <span
+                  style={{
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '999px',
+                    background: '#16a34a',
+                  }}
+                />
+                Logged in
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
